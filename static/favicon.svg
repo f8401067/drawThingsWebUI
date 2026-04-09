@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f0f0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded square background -->
+  <rect x="4" y="4" width="56" height="56" rx="12" ry="12" fill="url(#bgGradient)"/>
+  
+  <!-- AI/Art icon - Paint brush and sparkles -->
+  <g transform="translate(32, 32)">
+    <!-- Paint brush handle -->
+    <rect x="-3" y="-15" width="6" height="20" rx="2" fill="url(#iconGradient)" opacity="0.9"/>
+    
+    <!-- Brush tip -->
+    <ellipse cx="0" cy="8" rx="5" ry="3" fill="#ffd700" opacity="0.95"/>
+    
+    <!-- Sparkles/stars around brush -->
+    <circle cx="-10" cy="-8" r="2" fill="#ffd700" opacity="0.9"/>
+    <circle cx="12" cy="-5" r="1.5" fill="#ffd700" opacity="0.85"/>
+    <circle cx="-8" cy="12" r="1.8" fill="#ffd700" opacity="0.8"/>
+    <circle cx="10" cy="10" r="1.2" fill="#ffd700" opacity="0.75"/>
+    
+    <!-- Small star shapes -->
+    <path d="M -14,-12 L -13.5,-10.5 L -12,-10 L -13.5,-9.5 L -14,-8 L -14.5,-9.5 L -16,-10 L -14.5,-10.5 Z" 
+          fill="#ffffff" opacity="0.9"/>
+    <path d="M 13,-9 L 13.4,-7.8 L 14.6,-7.4 L 13.4,-7 L 13,-5.8 L 12.6,-7 L 11.4,-7.4 L 12.6,-7.8 Z" 
+          fill="#ffffff" opacity="0.85"/>
+  </g>
+</svg>

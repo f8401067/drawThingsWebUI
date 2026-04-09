@@ -1,0 +1,57 @@
+# 生成的图片
+/generated_images/*
+
+# 数据库文件
+/history.db
+
+# JSON 数据文件
+/generation_history.json
+/timing_stats.json
+
+# 配置文件
+/config.json
+
+# Windows 系统文件
+nul
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 测试覆盖率
+.coverage
+htmlcov/
+.pytest_cache/
+
+# 文档生成
+/docs/_build/

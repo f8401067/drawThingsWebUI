@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成历史 - DrawThings WebUI</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .page-header h1 {
+            color: white;
+            font-size: 2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .user-id-display {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: normal;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 13px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-back:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-clear {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #d32f2f;
+        }
+
+        .btn-toggle {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-toggle:hover {
+            background: #5568d3;
+        }
+
+        .view-mode-indicator {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .view-mode-indicator.show {
+            display: block;
+        }
+
+        /* History Grid - 瀑布流 */
+        .history-grid {
+            column-count: 4;
+            column-gap: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .history-grid {
+                column-count: 3;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .history-grid {
+                column-count: 3;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .history-grid {
+                column-count: 2;
+                column-gap: 8px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .history-grid {
+                column-count: 2;
+                column-gap: 6px;
+            }
+        }
+
+        .history-item {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: white;
+            break-inside: avoid;
+            margin-bottom: 10px;
+        }
+
+        .history-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        .history-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: pointer;
+        }
+
+        .history-item-info {
+            padding: 6px 8px;
+        }
+
+        .history-item-prompt {
+            font-size: 11px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+            cursor: pointer;
+            padding: 3px 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .history-item-prompt:hover {
+            background-color: #f0f0f0;
+        }
+
+        .history-item-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #999;
+        }
+
+        .seed-value {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .seed-value:hover {
+            background-color: #e8f4fd;
+            color: #1976d2;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #666;
+        }
+
+        /* User UID Display - Removed, now in header */
+
+        /* Date Filter */
+        .date-filter-container {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .date-filter-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .date-input {
+            padding: 6px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+            cursor: pointer;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-date-filter {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .btn-date-filter:hover {
+            background: #5568d3;
+        }
+
+        .btn-date-clear {
+            background: #f5f5f5;
+            color: #666;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .btn-date-clear:hover {
+            background: #e0e0e0;
+        }
+
+        /* Custom Date Picker */
+        .custom-date-picker {
+            position: relative;
+            display: inline-block;
+        }
+
+        .date-picker-dropdown {
+            display: none;
+            position: fixed; /* 改为fixed，避免被父容器的overflow裁剪 */
+            margin-top: 5px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 10px;
+            z-index: 10000;
+            min-width: 240px;
+            max-width: 300px;
+        }
+
+        .date-picker-dropdown.show {
+            display: block;
+        }
+
+        .date-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .date-picker-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .date-picker-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .date-picker-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .date-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .date-item {
+            padding: 8px 10px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .date-item:hover:not(.disabled) {
+            background: #f0f4ff;
+        }
+
+        .date-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .date-item.selected:hover {
+            background: #5568d3;
+        }
+
+        .date-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+
+        .date-item-label {
+            font-size: 13px;
+        }
+
+        .date-item-badge {
+            background: #667eea;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .date-item.selected .date-item-badge {
+            background: white;
+            color: #667eea;
+        }
+
+        .no-dates-message {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            z-index: 9999;
+        }
+
+        .back-to-top:hover {
+            background: #5568d3;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        .back-to-top.show {
+            display: flex;
+        }
+
+        /* Rating Stars */
+        .rating-container {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-top: 6px;
+            padding: 0 8px 8px;
+        }
+
+        .elapsed-time {
+            font-size: 11px;
+            color: #999;
+            margin-left: auto;
+            padding: 2px 6px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .star {
+            cursor: pointer;
+            font-size: 14px;
+            color: #ddd;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #ffc107;
+            transform: scale(1.1);
+        }
+
+        .bad-rating {
+            cursor: pointer;
+            font-size: 16px;
+            color: #ccc;
+            transition: all 0.2s;
+            user-select: none;
+            margin-left: 4px;
+        }
+
+        .bad-rating:hover {
+            color: #f44336;
+        }
+
+        .bad-rating.active {
+            color: #f44336;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .filter-header {
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .filter-header:hover {
+            background-color: #f5f5f5;
+        }
+
+        .filter-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-toggle-icon {
+            font-size: 12px;
+            transition: transform 0.3s;
+            color: #666;
+        }
+
+        .filter-toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .filter-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .filter-content.expanded {
+            max-height: 500px;
+        }
+
+        .filter-body {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+            min-width: 80px;
+        }
+
+        .rating-filter-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .rating-filter-btn {
+            padding: 6px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rating-filter-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .rating-filter-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .rating-filter-btn .stars {
+            color: #ffc107;
+        }
+
+        .rating-filter-btn.active .stars {
+            color: white;
+        }
+
+        .delete-bad-inline {
+            background: #ff5722;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 13px;
+            display: none;
+            margin-left: 8px;
+        }
+
+        .delete-bad-inline.show {
+            display: inline-block;
+        }
+
+        .delete-bad-inline:hover {
+            background: #e64a19;
+            transform: translateY(-1px);
+        }
+
+        /* Custom Modal Styles */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .custom-modal-overlay.show {
+            display: flex;
+        }
+
+        .custom-modal {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .custom-modal-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .custom-modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .custom-modal-message {
+            font-size: 15px;
+            color: #666;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            white-space: pre-line;
+        }
+
+        .custom-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .custom-modal-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 100px;
+        }
+
+        .custom-modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .custom-modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .custom-modal-btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .custom-modal-btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>生成历史 <span class="user-id-display">ID: <strong id="userUidValue">加载中...</strong></span></h1>
+            <div class="header-actions">
+                <a href="/" class="btn btn-back">返回首页</a>
+            </div>
+        </div>
+
+
+        <!-- Filter Section (Collapsible) -->
+        <div class="filter-section">
+            <div class="filter-header" onclick="toggleFilterSection()">
+                <div class="filter-title">
+                    🔍 筛选条件
+                </div>
+                <div class="filter-actions">
+                    <span id="viewModeIndicator" class="view-mode-indicator">🌍 所有用户</span>
+                    <button class="btn btn-toggle" id="toggleViewBtn" onclick="event.stopPropagation(); toggleViewMode()" style="padding: 6px 14px; font-size: 13px;">查看所有用户</button>
+                    <span class="filter-toggle-icon collapsed" id="filterToggleIcon">▼</span>
+                </div>
+            </div>
+            <div class="filter-content" id="filterContent">
+                <div class="filter-body">
+                    <!-- Date Filter -->
+                    <div class="filter-row">
+                        <span class="filter-label">📅 日期筛选:</span>
+                        <div class="custom-date-picker">
+                            <input type="text" id="dateFilterDisplay" class="date-input" readonly placeholder="选择日期" style="cursor: pointer; min-width: 150px;" onclick="event.stopPropagation(); toggleDatePicker()">
+                            <div id="datePickerDropdown" class="date-picker-dropdown">
+                                <div class="date-picker-header">
+                                    <span class="date-picker-title">选择日期</span>
+                                    <button class="date-picker-close" onclick="event.stopPropagation(); toggleDatePicker()">×</button>
+                                </div>
+                                <div id="dateList" class="date-list">
+                                    <div class="loading" style="padding: 20px;">
+                                        <div class="spinner" style="width: 30px; height: 30px; border-width: 3px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-date-clear" onclick="clearDateFilter()">清除日期</button>
+                    </div>
+
+                    <!-- Rating Filter -->
+                    <div class="filter-row">
+                        <span class="filter-label">⭐ 星级筛选:</span>
+                        <div class="rating-filter-options">
+                            <button class="rating-filter-btn" data-rating="" onclick="selectRatingFilter('')">
+                                全部
+                            </button>
+                            <button class="rating-filter-btn" data-rating="3" onclick="selectRatingFilter(3)">
+                                <span class="stars">★★★</span>
+                            </button>
+                            <button class="rating-filter-btn" data-rating="2" onclick="selectRatingFilter(2)">
+                                <span class="stars">★★</span>
+                            </button>
+                            <button class="rating-filter-btn" data-rating="1" onclick="selectRatingFilter(1)">
+                                <span class="stars">★</span>
+                            </button>
+                            <button class="rating-filter-btn" data-rating="-1" onclick="selectRatingFilter(-1)">
+                                👎
+                            </button>
+                            <button class="delete-bad-inline" id="deleteBadBtn" onclick="deleteBadImages()" title="删除所有标记为Bad的图片">
+                                🗑️ 删除标记Bad的图片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <p>加载历史记录中...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">📷</div>
+            <h2>暂无历史记录</h2>
+            <p>生成的图片会显示在这里</p>
+            <a href="/" class="btn btn-back" style="margin-top: 20px;">去生成图片</a>
+        </div>
+
+        <!-- History Grid -->
+        <div id="historyGrid" class="history-grid" style="display: none;"></div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTopBtn" onclick="scrollToTop()" title="返回顶部">↑</button>
+
+    <!-- Custom Modal for Alert/Confirm -->
+    <div id="customModalOverlay" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <div id="customModalIcon" class="custom-modal-icon"></div>
+            <div id="customModalTitle" class="custom-modal-title"></div>
+            <div id="customModalMessage" class="custom-modal-message"></div>
+            <div id="customModalButtons" class="custom-modal-buttons"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let userId = null;
+        let showAllUsers = false;
+        let currentDateFilter = '';
+        let currentRatingFilters = new Set(); // 改为Set支持多选
+        let availableDates = [];
+
+        // Initialize user ID
+        async function initUserId() {
+            // Try to load from localStorage
+            const savedId = localStorage.getItem('user_id');
+            
+            if (savedId) {
+                userId = parseInt(savedId);
+                displayUserId();
+                return Promise.resolve();
+            } else {
+                // 首次访问，请求服务器分配新ID
+                return createNewUserId();
+            }
+        }
+        
+        // Create new user ID from server
+        async function createNewUserId() {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/create`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.user_id) {
+                        userId = data.user_id;
+                        localStorage.setItem('user_id', userId);
+                        displayUserId();
+                        console.log(`新用户ID已分配: ${userId}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to create user ID:', error);
+                displayUserId(); // 显示"加载中"
+            }
+        }
+        
+        function displayUserId() {
+            const displayElement = document.getElementById('userUidValue');
+            if (displayElement) {
+                if (userId) {
+                    displayElement.textContent = userId;
+                } else {
+                    displayElement.textContent = '加载中...';
+                }
+            }
+        }
+
+        function getFetchOptions(method = 'GET', body = null) {
+            const options = {
+                method: method,
+                headers: {}
+            };
+            
+            // Add user ID header if available
+            if (userId) {
+                options.headers['X-User-ID'] = userId;
+            }
+            
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+            return options;
+        }
+
+        // Toggle view mode
+        function toggleViewMode() {
+            showAllUsers = !showAllUsers;
+            const btn = document.getElementById('toggleViewBtn');
+            const indicator = document.getElementById('viewModeIndicator');
+            
+            if (showAllUsers) {
+                btn.textContent = '只看我的';
+                indicator.classList.add('show');
+            } else {
+                btn.textContent = '查看所有用户';
+                indicator.classList.remove('show');
+            }
+            
+            // 重新加载可用日期列表
+            loadAvailableDates();
+            loadHistory();
+        }
+
+        // Toggle date picker dropdown
+        function toggleDatePicker() {
+            const dropdown = document.getElementById('datePickerDropdown');
+            const input = document.getElementById('dateFilterDisplay');
+            const willShow = !dropdown.classList.contains('show');
+            
+            if (willShow) {
+                // 计算下拉框位置
+                const rect = input.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + 5) + 'px';
+                dropdown.style.left = rect.left + 'px';
+            }
+            
+            dropdown.classList.toggle('show');
+            
+            // 如果打开，加载可用日期
+            if (willShow) {
+                loadAvailableDates();
+            }
+        }
+
+        // Load available dates
+        async function loadAvailableDates() {
+            try {
+                // 构建 URL
+                let url = `${API_BASE}/api/history?query_dates=true`;
+                
+                if (showAllUsers) {
+                    url += '&all_users=true';
+                }
+                    
+                const response = await fetch(url, getFetchOptions());
+                
+                // 检查响应是否成功
+                if (!response.ok) {
+                    console.error('Failed to fetch dates:', response.status, response.statusText);
+                    availableDates = [];
+                    renderDateList();
+                    return;
+                }
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    availableDates = data.dates || [];
+                    renderDateList();
+                } else {
+                    console.error('API returned error:', data);
+                    availableDates = [];
+                    renderDateList();
+                }
+            } catch (error) {
+                console.error('Failed to load available dates:', error);
+                availableDates = [];
+                renderDateList();
+            }
+        }
+
+        // Render date list
+        function renderDateList() {
+            const dateList = document.getElementById('dateList');
+            
+            if (!availableDates || availableDates.length === 0) {
+                dateList.innerHTML = '<div class="no-dates-message">暂无历史记录</div>';
+                return;
+            }
+            
+            dateList.innerHTML = availableDates.map(date => {
+                const isSelected = date === currentDateFilter;
+                // 修复时区问题：手动解析日期字符串，避免 new Date() 的时区转换
+                const [year, month, day] = date.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day); // 月份从0开始
+                const formattedDate = dateObj.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+                
+                return `
+                    <div class="date-item ${isSelected ? 'selected' : ''}" onclick="selectDate('${date}')">
+                        <span class="date-item-label">${formattedDate}</span>
+                        <span class="date-item-badge">有记录</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Select date
+        function selectDate(date) {
+            currentDateFilter = date;
+            
+            // Update display
+            const dateObj = new Date(date);
+            const formattedDate = dateObj.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            document.getElementById('dateFilterDisplay').value = formattedDate;
+            
+            // Close dropdown
+            toggleDatePicker();
+            
+            // Load history
+            loadHistory();
+        }
+
+        // Clear date filter
+        function clearDateFilter() {
+            currentDateFilter = '';
+            document.getElementById('dateFilterDisplay').value = '';
+            loadHistory();
+        }
+
+        // Toggle filter section
+        function toggleFilterSection() {
+            const content = document.getElementById('filterContent');
+            const icon = document.getElementById('filterToggleIcon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.add('collapsed');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.remove('collapsed');
+            }
+        }
+
+        // Select rating filter (支持多选)
+        function selectRatingFilter(rating) {
+            const ratingValue = rating === '' ? null : parseInt(rating);
+            
+            if (ratingValue === null) {
+                // 点击"全部"，清空所有选择
+                currentRatingFilters.clear();
+            } else {
+                // 切换该评级的选中状态
+                if (currentRatingFilters.has(ratingValue)) {
+                    currentRatingFilters.delete(ratingValue);
+                } else {
+                    currentRatingFilters.add(ratingValue);
+                }
+            }
+            
+            // Update UI
+            document.querySelectorAll('.rating-filter-btn').forEach(btn => {
+                const btnRating = btn.dataset.rating === '' ? null : parseInt(btn.dataset.rating);
+                
+                if (btnRating === null) {
+                    // "全部"按钮：只有当没有任何选择时才高亮
+                    btn.classList.toggle('active', currentRatingFilters.size === 0);
+                } else {
+                    // 星级按钮：根据是否在Set中来决定高亮
+                    btn.classList.toggle('active', currentRatingFilters.has(btnRating));
+                }
+            });
+            
+            // Show/hide delete bad button
+            updateDeleteBadButtonVisibility();
+            
+            // Load history with new filters
+            loadHistory();
+        }
+
+        // Update delete bad button visibility
+        function updateDeleteBadButtonVisibility() {
+            const deleteBtn = document.getElementById('deleteBadBtn');
+            // 只有当只选择了Bad(-1)且没有其他选择时才显示删除按钮
+            if (currentRatingFilters.size === 1 && currentRatingFilters.has(-1)) {
+                deleteBtn.classList.add('show');
+            } else {
+                deleteBtn.classList.remove('show');
+            }
+        }
+
+        // Rate image
+        async function rateImage(imageId, rating) {
+            // Save current scroll position
+            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            
+            try {
+                // If clicking on active bad rating, clear it (set to 0)
+                const actualRating = rating === -1 ? -1 : rating;
+                
+                const response = await fetch(`${API_BASE}/api/rating`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId || ''
+                    },
+                    body: JSON.stringify({
+                        image_id: imageId,
+                        rating: actualRating
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('评分已更新');
+                    // Reload history to show updated rating
+                    await loadHistory();
+                    // Restore scroll position
+                    window.scrollTo(0, scrollPosition);
+                } else {
+                    showToast('评分失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Failed to rate image:', error);
+                showToast('评分失败: ' + error.message);
+            }
+        }
+
+        // Delete all bad images
+        async function deleteBadImages() {
+            const confirmed = await confirm('确定要删除所有标记为 Bad 的图片吗？\n此操作将同时删除数据库记录和原文件，且无法恢复！');
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                // Build URL with current filters
+                let url = `${API_BASE}/api/history/bad?rating=-1`;
+                if (showAllUsers) {
+                    url += '&all_users=true';
+                }
+                
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-User-ID': userId || ''
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`成功删除 ${result.deleted_count} 张 Bad 图片`);
+                    // Clear rating filter and reload
+                    currentRatingFilters.clear();
+                    document.querySelectorAll('.rating-filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    document.querySelector('.rating-filter-btn[data-rating=""]').classList.add('active');
+                    updateDeleteBadButtonVisibility();
+                    loadHistory();
+                } else {
+                    showToast('删除失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Failed to delete bad images:', error);
+                showToast('删除失败: ' + error.message);
+            }
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                // 先显示加载状态，隐藏其他内容
+                document.getElementById('loadingState').style.display = 'block';
+                document.getElementById('historyGrid').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'none';
+                
+                // 构建 URL
+                let url = `${API_BASE}/api/history?`;
+                const params = [];
+                
+                if (showAllUsers) {
+                    params.push('all_users=true');
+                }
+                
+                if (currentDateFilter) {
+                    params.push(`date=${currentDateFilter}`);
+                }
+                
+                // 支持多星级筛选，将Set转换为数组并拼接
+                if (currentRatingFilters.size > 0) {
+                    const ratings = Array.from(currentRatingFilters).join(',');
+                    params.push(`rating=${ratings}`);
+                }
+                
+                url += params.join('&');
+                    
+                const response = await fetch(url, getFetchOptions());
+                
+                // 检查响应是否成功
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+
+                document.getElementById('loadingState').style.display = 'none';
+
+                if (data.success && data.history && data.history.length > 0) {
+                    renderHistory(data.history);
+                    document.getElementById('historyGrid').style.display = 'block';
+                } else {
+                    document.getElementById('emptyState').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Failed to load history:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('historyGrid').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                showToast('加载历史记录失败: ' + error.message);
+            }
+        }
+
+        function renderHistory(history) {
+            const grid = document.getElementById('historyGrid');
+            grid.innerHTML = history.map(item => {
+                const rating = item.rating || 0;
+                const imageId = item.image_id || item.id;
+                const starsHtml = generateStarsHtml(rating, imageId);
+                
+                return `
+                    <div class="history-item">
+                        <img src="${item.image_url}" alt="Generated Image" loading="lazy" onclick="openImage('${item.image_url}')">
+                        <div class="history-item-info">
+                            <div class="history-item-prompt" onclick="event.stopPropagation(); copyToClipboard('${escapeHtml(item.prompt || '无提示词')}', '提示词')">${escapeHtml(item.prompt || '无提示词')}</div>
+                            <div class="history-item-meta">
+                                <span>${item.width}x${item.height}</span>
+                                <span>Seed: <span class="seed-value" onclick="event.stopPropagation(); copyToClipboard('${item.seed}', 'Seed')">${item.seed}</span></span>
+                            </div>
+                            <div class="rating-container">
+                                ${starsHtml}
+                                <span class="elapsed-time">${formatElapsedTime(item.elapsed_time)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function generateStarsHtml(rating, imageId) {
+            let html = '';
+            
+            // Generate 3 stars (simplified)
+            const maxStars = 3;
+            for (let i = 1; i <= maxStars; i++) {
+                const isActive = i <= rating && rating > 0;
+                html += `<span class="star ${isActive ? 'active' : ''}" onclick="event.stopPropagation(); rateImage('${imageId}', ${i})">★</span>`;
+            }
+            
+            // Add bad rating button (emoji only)
+            const isBadActive = rating === -1;
+            const badIcon = isBadActive ? '❌' : '👎';
+            // Click on active bad rating will clear it (set to 0)
+            const clickAction = isBadActive ? `rateImage('${imageId}', 0)` : `rateImage('${imageId}', -1)`;
+            html += `<span class="bad-rating ${isBadActive ? 'active' : ''}" onclick="event.stopPropagation(); ${clickAction}" title="${isBadActive ? '取消Bad标记' : '标记为Bad'}">${badIcon}</span>`;
+            
+            return html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Format elapsed time
+        function formatElapsedTime(seconds) {
+            if (seconds === null || seconds === undefined || seconds === 0) {
+                return '';
+            }
+            
+            if (seconds < 1) {
+                return `${(seconds * 1000).toFixed(0)}ms`;
+            } else if (seconds < 60) {
+                return `${seconds.toFixed(1)}s`;
+            } else {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = (seconds % 60).toFixed(0);
+                return `${minutes}m${remainingSeconds}s`;
+            }
+        }
+
+        // Open image in new tab
+        function openImage(imageUrl) {
+            window.open(imageUrl, '_blank');
+        }
+
+        // Copy to clipboard
+        async function copyToClipboard(text, label) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast(`${label}已复制到剪贴板`);
+            } catch (err) {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast(`${label}已复制到剪贴板`);
+            }
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            // Remove existing toast if any
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.textContent = message;
+            
+            // Add styles
+            Object.assign(toast.style, {
+                position: 'fixed',
+                bottom: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                zIndex: '10000',
+                opacity: '0',
+                transition: 'opacity 0.3s ease'
+            });
+
+            document.body.appendChild(toast);
+
+            // Fade in
+            setTimeout(() => {
+                toast.style.opacity = '1';
+            }, 10);
+
+            // Auto hide after 2 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 2000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 先初始化用户ID，等待完成
+            await initUserId();
+            
+            // 设置默认日期为今天（使用本地时间）
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const today = `${year}-${month}-${day}`;
+            
+            try {
+                // 先加载可用日期
+                await loadAvailableDates();
+                
+                // 如果今天有记录，则默认选择今天
+                if (availableDates.includes(today)) {
+                    currentDateFilter = today;
+                    const dateObj = new Date(year, month - 1, day);
+                    const formattedDate = dateObj.toLocaleDateString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                    document.getElementById('dateFilterDisplay').value = formattedDate;
+                } else if (availableDates.length > 0) {
+                    // 如果今天没有记录，但有其他日期的记录
+                    // 清除之前的日期筛选，显示所有可用记录
+                    currentDateFilter = '';
+                    document.getElementById('dateFilterDisplay').value = '';
+                } else {
+                    // 没有任何记录，清除筛选
+                    currentDateFilter = '';
+                    document.getElementById('dateFilterDisplay').value = '';
+                }
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                // 出错时也清除日期筛选
+                currentDateFilter = '';
+            }
+            
+            // 加载历史记录
+            loadHistory();
+            
+            // Show/hide back to top button based on scroll position
+            window.addEventListener('scroll', function() {
+                const btn = document.getElementById('backToTopBtn');
+                if (window.pageYOffset > 300) {
+                    btn.classList.add('show');
+                } else {
+                    btn.classList.remove('show');
+                }
+            });
+            
+            // Close date picker when clicking outside
+            document.addEventListener('click', function(event) {
+                const datePicker = document.querySelector('.custom-date-picker');
+                const dropdown = document.getElementById('datePickerDropdown');
+                
+                if (datePicker && dropdown && !datePicker.contains(event.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        });
+
+        // Scroll to top smoothly
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        // Custom Modal Functions
+        let customModalCallback = null;
+
+        function showCustomModal(options) {
+            const overlay = document.getElementById('customModalOverlay');
+            const icon = document.getElementById('customModalIcon');
+            const title = document.getElementById('customModalTitle');
+            const message = document.getElementById('customModalMessage');
+            const buttons = document.getElementById('customModalButtons');
+
+            // Set callback first
+            customModalCallback = options.callback || null;
+
+            // Set icon
+            icon.textContent = options.icon || 'ℹ️';
+            
+            // Set title
+            title.textContent = options.title || '提示';
+            
+            // Set message
+            message.textContent = options.message || '';
+            
+            // Clear and create buttons
+            buttons.innerHTML = '';
+            
+            if (options.type === 'confirm') {
+                // Cancel button
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
+                cancelBtn.textContent = options.cancelText || '取消';
+                cancelBtn.onclick = () => {
+                    const callback = customModalCallback;
+                    hideCustomModal();
+                    if (callback) {
+                        callback(false);
+                    }
+                };
+                buttons.appendChild(cancelBtn);
+                
+                // Confirm button
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+                confirmBtn.textContent = options.confirmText || '确定';
+                confirmBtn.onclick = () => {
+                    const callback = customModalCallback;
+                    hideCustomModal();
+                    if (callback) {
+                        callback(true);
+                    }
+                };
+                buttons.appendChild(confirmBtn);
+            } else {
+                // Single OK button
+                const okBtn = document.createElement('button');
+                okBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+                okBtn.textContent = options.okText || '确定';
+                okBtn.onclick = () => {
+                    const callback = customModalCallback;
+                    hideCustomModal();
+                    if (callback) {
+                        callback();
+                    }
+                };
+                buttons.appendChild(okBtn);
+            }
+            
+            // Show modal
+            overlay.classList.add('show');
+        }
+
+        function hideCustomModal() {
+            const overlay = document.getElementById('customModalOverlay');
+            overlay.classList.remove('show');
+            customModalCallback = null;
+        }
+
+        // Override alert function
+        window.alert = function(message) {
+            showCustomModal({
+                icon: '⚠️',
+                title: '提示',
+                message: message,
+                type: 'alert'
+            });
+        };
+
+        // Override confirm function
+        window.confirm = function(message) {
+            return new Promise((resolve) => {
+                showCustomModal({
+                    icon: '❓',
+                    title: '确认',
+                    message: message,
+                    type: 'confirm',
+                    callback: resolve
+                });
+            });
+        };
+    </script>
+</body>
+</html>
