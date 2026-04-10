@@ -279,28 +279,32 @@
 
         .btn-loading {
             position: relative;
-            color: transparent !important;
+            overflow: hidden;
             pointer-events: none;
         }
 
-        .btn-loading::after {
+        .btn-loading::before {
             content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            margin-left: -10px;
-            margin-top: -10px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: button-spin 0.8s linear infinite;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: var(--progress, 0%);
+            background: linear-gradient(90deg, rgba(78, 205, 196, 0.4) 0%, rgba(78, 205, 196, 0.6) 50%, rgba(78, 205, 196, 0.4) 100%);
+            background-size: 200% 100%;
+            animation: progress-shimmer 1.5s infinite;
+            transition: width 0.3s ease;
+            z-index: 1;
         }
 
-        @keyframes button-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .btn-loading span {
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes progress-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .btn-secondary {
@@ -371,6 +375,55 @@
             max-height: 600px;
             border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* NSFW遮罩样式 */
+        .nsfw-mask-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .nsfw-mask {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .nsfw-mask:hover {
+            background: rgba(0, 0, 0, 0.75);
+        }
+
+        .nsfw-mask-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .nsfw-mask-text {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+
+        .nsfw-mask-hint {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
         }
 
         .image-controls {
@@ -658,7 +711,7 @@
         .progress-bar-wrapper {
             width: 100%;
             height: 24px;
-            background: #e0e0e0;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
             overflow: hidden;
             position: relative;
@@ -666,32 +719,13 @@
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: #e0e0e0;
             border-radius: 12px;
             transition: width 0.3s ease;
-            position: relative;
-            width: 0%;
-        }
-
-        .progress-bar::after {
-            content: '';
             position: absolute;
-            top: 0;
-            left: 0;
             right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(255, 255, 255, 0.3) 50%,
-                transparent 100%
-            );
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            top: 0;
+            width: 100%;
         }
 
         .progress-text {
@@ -817,8 +851,8 @@
         <div class="header-section">
             <h1>AI文生图 <span class="user-id-display">ID: <strong id="userUidValue">加载中...</strong></span></h1>
             <div class="header-actions">
-                <button id="backToFormBtn" class="history-btn" onclick="backToForm()" style="display: none; margin-right: 10px;">↩️ 返回重新生成</button>
-                <a href="/history.html" class="history-btn">📜 查看生成历史</a>
+                <button id="backToFormBtn" class="history-btn" onclick="backToForm()" style="display: none; margin-right: 10px;">返回首页</button>
+                <a href="/history.html" class="history-btn">历史图片</a>
             </div>
         </div>
 
@@ -847,6 +881,7 @@
                 <div class="form-group">
                     <label for="sizePreset">图片尺寸</label>
                     <select id="sizePreset">
+                        <option value="256x256">256 x 256 (1:1 适合测试)</option>
                         <option value="512x512" selected>512 x 512 (1:1)</option>
                         <option value="512x768">512 x 768 (2:3)</option>
                         <option value="768x512">768 x 512 (3:2)</option>
@@ -896,15 +931,7 @@
             </div>
 
             <div style="display: flex; gap: 10px; align-items: center;">
-                <button id="generateBtn" class="btn btn-primary" style="flex: 0 0 auto; min-width: 120px;">生成图片</button>
-                <div id="progressContainer" style="flex: 1; display: none;">
-                    <div class="progress-bar-wrapper">
-                        <div id="progressBar" class="progress-bar"></div>
-                    </div>
-                    <div class="progress-text" style="margin-top: 5px; text-align: center; font-size: 13px;">
-                        进度: <strong id="progressPercent">0%</strong>
-                    </div>
-                </div>
+                <button id="generateBtn" class="btn btn-primary" style="flex: 0 0 auto; min-width: 120px;"><span>生成图片</span></button>
             </div>
         </div>
 
@@ -912,9 +939,16 @@
         <div id="resultPanel" class="result-panel">
             <h3>生成结果</h3>
             <div class="image-container">
-                <a id="imageLink" href="" target="_blank" class="image-link" title="点击查看原图">
-                    <img id="generatedImage" class="generated-image" src="" alt="Generated Image">
-                </a>
+                <div id="nsfwMaskContainer" class="nsfw-mask-container" style="display: none;">
+                    <a id="imageLink" href="" target="_blank" class="image-link" title="点击查看原图">
+                        <img id="generatedImage" class="generated-image" src="" alt="Generated Image">
+                    </a>
+                    <div id="nsfwMask" class="nsfw-mask" style="display: none;" onclick="showNsfwHint()">
+                        <div class="nsfw-mask-icon">🔞</div>
+                        <div class="nsfw-mask-text">此图片包含不适合工作场所的内容</div>
+                        <div class="nsfw-mask-hint">点击查看详情</div>
+                    </div>
+                </div>
             </div>
             <div class="generation-info">
                 <div class="info-item">
@@ -985,6 +1019,22 @@
             <div id="customModalTitle" class="custom-modal-title"></div>
             <div id="customModalMessage" class="custom-modal-message"></div>
             <div id="customModalButtons" class="custom-modal-buttons"></div>
+        </div>
+    </div>
+
+    <!-- NSFW Warning Modal -->
+    <div id="nsfwWarningModal" class="custom-modal-overlay" style="display: none;">
+        <div class="custom-modal">
+            <div class="custom-modal-icon">⚠️</div>
+            <div class="custom-modal-title">NSFW内容警告</div>
+            <div class="custom-modal-message">
+                检测到生成的图片可能包含不适合工作场所(NSFW)的内容。
+                <br><br>
+                该图片已被自动标记，您可以在历史记录中查看和管理。
+            </div>
+            <div class="custom-modal-buttons">
+                <button class="btn-config btn-config-primary" onclick="closeNsfwWarning()">我知道了</button>
+            </div>
         </div>
     </div>
 
@@ -1101,7 +1151,7 @@
                     if (generatingCount > 0) {
                         generatingHtml = `
                             <div class="generating-info" style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; text-align: center;">
-                                <span style="color: #856404;">🔄 当前有 <strong>${generatingCount}</strong> 个任务正在生成中...</span>
+                                <span style="color: #856404;">🔄 当前有 <strong>${generatingCount}</strong> 个任务正在生成中... (最多允许5个并发任务)</span>
                             </div>
                         `;
                     }
@@ -1171,7 +1221,7 @@
                             genDiv.style.cssText = 'margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; text-align: center;';
                             statusPanel.appendChild(genDiv);
                         }
-                        genDiv.innerHTML = `<span style="color: #856404;">🔄 当前有 <strong>${count}</strong> 个任务正在生成中...</span>`;
+                        genDiv.innerHTML = `<span style="color: #856404;">🔄 当前有 <strong>${count}</strong> 个任务正在生成中... (最多允许5个并发任务)</span>`;
                     } else {
                         // Hide the generating info if exists
                         if (genDiv) {
@@ -1211,7 +1261,6 @@
         // Generate image
         async function generateImage() {
             const generateBtn = document.getElementById('generateBtn');
-            const progressContainer = document.getElementById('progressContainer');
 
             // Get form values
             const sizePreset = document.getElementById('sizePreset').value;
@@ -1242,10 +1291,27 @@
             // Show loading on button
             generateBtn.disabled = true;
             generateBtn.classList.add('btn-loading');
-            progressContainer.style.display = 'block';
+            generateBtn.style.setProperty('--progress', '0%');
             
-            // Start progress simulation
-            startProgressSimulation(width, height, steps);
+            // First get estimated time from backend
+            let estimatedTime = null;
+            try {
+                const estimateResponse = await fetch(`${API_BASE}/api/estimate_time`, getFetchOptions('POST', {
+                    width: width,
+                    height: height,
+                    steps: steps
+                }));
+                const estimateData = await estimateResponse.json();
+                if (estimateData.success) {
+                    estimatedTime = estimateData.estimated_time;
+                    console.log(`预估生成时间: ${estimatedTime}秒`);
+                }
+            } catch (error) {
+                console.error('获取预估时间失败:', error);
+            }
+            
+            // Start progress simulation with estimated time
+            startProgressSimulation(width, height, steps, estimatedTime);
 
             try {
                 const response = await fetch(`${API_BASE}/api/generate`, getFetchOptions('POST', params));
@@ -1258,14 +1324,19 @@
                     showResult(result);
                 } else {
                     hideProgress();
-                    alert('生成失败: ' + result.error);
+                    // 检查是否是因为并发任务过多导致的失败
+                    if (response.status === 429) {
+                        alert('生成失败: ' + result.error + '\n\n提示: 您可以稍等片刻后再次尝试生成。');
+                    } else {
+                        alert('生成失败: ' + result.error);
+                    }
                 }
             } catch (error) {
                 alert('请求失败: ' + error.message);
             } finally {
                 generateBtn.disabled = false;
                 generateBtn.classList.remove('btn-loading');
-                progressContainer.style.display = 'none';
+                generateBtn.style.removeProperty('--progress');
             }
         }
 
@@ -1277,6 +1348,8 @@
             const backToFormBtn = document.getElementById('backToFormBtn');
             const generatedImage = document.getElementById('generatedImage');
             const imageLink = document.getElementById('imageLink');
+            const nsfwMaskContainer = document.getElementById('nsfwMaskContainer');
+            const nsfwMask = document.getElementById('nsfwMask');
 
             // Set image and link
             generatedImage.src = result.image_url;
@@ -1294,6 +1367,12 @@
             statusPanel.classList.add('hidden');
             backToFormBtn.style.display = 'inline-block';
             resultPanel.classList.add('show');
+            
+            // 显示遮罩容器
+            nsfwMaskContainer.style.display = 'inline-block';
+            
+            // 开始轮询检查NSFW状态（最多检查30秒）
+            checkNsfwStatus(result.image_filename, 0);
         }
 
         // Back to form
@@ -1302,11 +1381,21 @@
             const resultPanel = document.getElementById('resultPanel');
             const statusPanel = document.getElementById('statusPanel');
             const backToFormBtn = document.getElementById('backToFormBtn');
+            const nsfwMaskContainer = document.getElementById('nsfwMaskContainer');
+            const nsfwMask = document.getElementById('nsfwMask');
 
             formPanel.classList.remove('hidden');
             statusPanel.classList.remove('hidden');
             backToFormBtn.style.display = 'none';
             resultPanel.classList.remove('show');
+            
+            // 隐藏NSFW遮罩
+            if (nsfwMaskContainer) {
+                nsfwMaskContainer.style.display = 'none';
+            }
+            if (nsfwMask) {
+                nsfwMask.style.display = 'none';
+            }
         }
 
         // Image zoom controls
@@ -1462,58 +1551,84 @@
         let estimatedTotalTime = 0;
         let startTime = 0;
 
-        function startProgressSimulation(width, height, steps) {
-            // Reset progress
-            const progressBar = document.getElementById('progressBar');
-            const progressPercent = document.getElementById('progressPercent');
-            
-            progressBar.style.width = '0%';
-            progressPercent.textContent = '0%';
-            
+        function startProgressSimulation(width, height, steps, serverEstimatedTime = null) {
             startTime = Date.now();
-            
-            // 基于尺寸和步数估算时间（前端初步估算）
-            // 基准：512x512 @ 8 steps ≈ 30秒
-            const baseTime = 30;
-            const pixelRatio = (width * height) / (512 * 512);
-            const stepRatio = steps / 8;
-            estimatedTotalTime = baseTime * pixelRatio * stepRatio * 1.1; // 10% 缓冲
-            
-            let currentProgress = 0;
-            
+                    
+            // 优先使用服务器返回的预估时间
+            if (serverEstimatedTime && serverEstimatedTime > 0) {
+                estimatedTotalTime = serverEstimatedTime;
+                console.log(`使用服务器预估时间: ${estimatedTotalTime}秒`);
+            } else {
+                // 降级方案：基于尺寸和步数估算时间(前端初步估算)
+                // 基准:512x512 @ 8 steps ≈ 30秒
+                const baseTime = 30;
+                const pixelRatio = (width * height) / (512 * 512);
+                const stepRatio = steps / 8;
+                estimatedTotalTime = baseTime * pixelRatio * stepRatio * 1.1; // 10% 缓冲
+                console.log(`使用前端估算时间: ${estimatedTotalTime}秒`);
+            }
+                    
+            let currentProgress = 100; // 从100%开始（全部是灰色）
+                    
             // 清除之前的定时器
             if (progressInterval) {
                 clearInterval(progressInterval);
             }
-            
+                    
             // 模拟进度更新
             progressInterval = setInterval(() => {
                 const elapsed = (Date.now() - startTime) / 1000; // 已过秒数
-                const targetProgress = Math.min((elapsed / estimatedTotalTime) * 100, 95); // 最多到95%
-                
+                const targetProgress = Math.max(100 - ((elapsed / estimatedTotalTime) * 100), 5); // 从100%递减到最少5%
+                        
                 // 平滑过渡
-                if (currentProgress < targetProgress) {
-                    currentProgress += (targetProgress - currentProgress) * 0.1;
+                if (currentProgress > targetProgress) {
+                    currentProgress -= (currentProgress - targetProgress) * 0.1;
+                }
+                        
+                // 更新按钮上的进度条（白色光效从左向右增长）
+                const generateBtn = document.getElementById('generateBtn');
+                if (generateBtn) {
+                    const progressPercent = Math.round(currentProgress);
+                    generateBtn.style.setProperty('--progress', (100 - progressPercent) + '%');
                 }
                 
-                // 更新UI
-                progressBar.style.width = currentProgress + '%';
-                progressPercent.textContent = Math.round(currentProgress) + '%';
+                // 更新进度条（灰色部分从右向左减少）
+                const progressBar = document.getElementById('progressBar');
+                if (progressBar) {
+                    progressBar.style.width = currentProgress + '%';
+                }
+                
+                // 更新进度文本
+                const progressPercent = document.getElementById('progressPercent');
+                if (progressPercent) {
+                    progressPercent.textContent = Math.round(100 - currentProgress) + '%';
+                }
             }, 200); // 每200ms更新一次
         }
-
+        
         function completeProgress() {
             if (progressInterval) {
                 clearInterval(progressInterval);
                 progressInterval = null;
             }
+                    
+            // 快速完成到0%（灰色部分完全消失）
+            const generateBtn = document.getElementById('generateBtn');
+            if (generateBtn) {
+                generateBtn.style.setProperty('--progress', '100%');
+            }
             
+            // 更新进度条（灰色部分完全消失）
             const progressBar = document.getElementById('progressBar');
-            const progressPercent = document.getElementById('progressPercent');
+            if (progressBar) {
+                progressBar.style.width = '0%';
+            }
             
-            // 快速完成到100%
-            progressBar.style.width = '100%';
-            progressPercent.textContent = '100%';
+            // 更新进度文本
+            const progressPercent = document.getElementById('progressPercent');
+            if (progressPercent) {
+                progressPercent.textContent = '100%';
+            }
         }
 
         function hideProgress() {
@@ -1738,6 +1853,77 @@
                 console.log('showCustomModal called');
             });
         };
+
+        // NSFW警告弹窗相关函数
+        function closeNsfwWarning() {
+            const modal = document.getElementById('nsfwWarningModal');
+            modal.style.display = 'none';
+        }
+
+        function showNsfwWarning() {
+            const modal = document.getElementById('nsfwWarningModal');
+            modal.style.display = 'flex';
+        }
+
+        // 轮询检查图片的NSFW状态
+        async function checkNsfwStatus(imageFilename, attempts) {
+            // 最多尝试30次（30秒）
+            if (attempts >= 30) {
+                console.log('NSFW检测超时');
+                return;
+            }
+
+            try {
+                // 从历史记录中获取该图片的信息（获取更多记录以确保能找到）
+                // 注意：必须添加show_nsfw=true，否则NSFW图片会被过滤掉
+                const response = await fetch(`${API_BASE}/api/history?limit=20&show_nsfw=true`, getFetchOptions());
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success && data.history && data.history.length > 0) {
+                        // 查找匹配的图片
+                        const image = data.history.find(item => item.image_filename === imageFilename);
+                        if (image) {
+                            if (image.is_nsfw === 1) {
+                                // 检测到NSFW，显示遮罩
+                                showNsfwMask();
+                            }
+                            // 无论是否NSFW，找到后就停止轮询
+                            return;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('检查NSFW状态失败:', error);
+            }
+
+            // 1秒后再次检查
+            setTimeout(() => checkNsfwStatus(imageFilename, attempts + 1), 1000);
+        }
+
+        // 显示NSFW遮罩
+        function showNsfwMask() {
+            const nsfwMask = document.getElementById('nsfwMask');
+            if (nsfwMask) {
+                nsfwMask.style.display = 'flex';
+                console.log('NSFW遮罩已显示');
+            }
+        }
+
+        // 显示NSFW提示信息
+        function showNsfwHint() {
+            showCustomModal({
+                icon: 'ℹ️',
+                title: '查看NSFW内容',
+                message: '此图片已被标记为不适合工作场所(NSFW)的内容。<br><br>如需查看原图，请前往历史记录页面，开启“显示NSFW”开关。',
+                type: 'info',
+                buttons: [{
+                    text: '我知道了',
+                    className: 'btn-config btn-config-primary',
+                    onClick: () => hideCustomModal()
+                }]
+            });
+        }
 
     </script>
 </body>

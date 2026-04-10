@@ -11,7 +11,8 @@ from database import (
     get_history_count,
     update_rating,
     delete_bad_images,
-    get_or_create_user
+    get_or_create_user,
+    toggle_nsfw
 )
 import os
 
@@ -134,12 +135,28 @@ def register_history_routes(app):
                         rating_filter = None
             except ValueError:
                 rating_filter = None
+        
+        # 获取最低星级筛选参数（min_rating）
+        min_rating = request.args.get('min_rating', None)
+        if min_rating is not None:
+            try:
+                min_rating = int(min_rating)
+                if min_rating not in [0, 1, 2, 3]:  # 0表示未评分
+                    min_rating = None
+            except ValueError:
+                min_rating = None
+        
+        # 获取排除Bad参数
+        exclude_bad = request.args.get('exclude_bad', 'false').lower() == 'true'
+        
+        # 获取NSFW显示参数
+        show_nsfw = request.args.get('show_nsfw', 'false').lower() == 'true'
             
         try:
             if all_users:
                 # 获取所有用户的历史记录
-                history = get_all_history(limit=100, date_filter=filter_date, rating_filter=rating_filter)
-                count = get_history_count(date_filter=filter_date, rating_filter=rating_filter)
+                history = get_all_history(limit=100, date_filter=filter_date, rating_filter=rating_filter, min_rating=min_rating, exclude_bad=exclude_bad, show_nsfw=show_nsfw)
+                count = get_history_count(date_filter=filter_date, rating_filter=rating_filter, min_rating=min_rating, exclude_bad=exclude_bad, show_nsfw=show_nsfw)
             else:
                 # 只返回当前用户的历史
                 if not user_id:
@@ -147,15 +164,16 @@ def register_history_routes(app):
                     history = []
                     count = 0
                 else:
-                    history = get_user_history(user_id, limit=50, date_filter=filter_date, rating_filter=rating_filter)
-                    count = get_history_count(user_id=user_id, date_filter=filter_date, rating_filter=rating_filter)
+                    history = get_user_history(user_id, limit=50, date_filter=filter_date, rating_filter=rating_filter, min_rating=min_rating, exclude_bad=exclude_bad, show_nsfw=show_nsfw)
+                    count = get_history_count(user_id=user_id, date_filter=filter_date, rating_filter=rating_filter, min_rating=min_rating, exclude_bad=exclude_bad, show_nsfw=show_nsfw)
                         
             return jsonify({
                 "success": True,
                 "history": history,
                 "count": count,
                 "user_id": user_id,
-                "all_users": all_users
+                "all_users": all_users,
+                "show_nsfw": show_nsfw
             })
         except Exception as e:
             print(f"Error getting history: {e}")
@@ -243,6 +261,50 @@ def register_history_routes(app):
                 }), 404
         except Exception as e:
             print(f"Error rating image: {e}")
+            return jsonify({
+                "success": False,
+                "error": str(e)
+            }), 500
+
+    @app.route('/api/nsfw', methods=['POST'])
+    def nsfw_toggle_handler():
+        """切换图片的NSFW标记
+        
+        接收图片 ID，切换其NSFW状态。
+        不校验用户ID，可以对所有用户的图片进行标记
+        
+        Returns:
+            Response: JSON 响应，包含操作结果
+        """
+        user_id = get_user_id()  # 可选，用于记录谁标记的
+        
+        try:
+            data = request.json
+            image_id = data.get('image_id')
+            
+            if not image_id:
+                return jsonify({
+                    "success": False,
+                    "error": "缺少图片 ID"
+                }), 400
+            
+            success, new_nsfw_value = toggle_nsfw(image_id)
+            
+            if success:
+                return jsonify({
+                    "success": True,
+                    "message": "NSFW标记已更新",
+                    "image_id": image_id,
+                    "is_nsfw": new_nsfw_value,
+                    "user_id": user_id
+                })
+            else:
+                return jsonify({
+                    "success": False,
+                    "error": "未找到该图片"
+                }), 404
+        except Exception as e:
+            print(f"Error toggling NSFW: {e}")
             return jsonify({
                 "success": False,
                 "error": str(e)

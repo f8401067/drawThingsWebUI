@@ -6,6 +6,7 @@ AI 提示词润色模块
 import os
 import json
 import requests
+import logging
 
 # 默认的大模型 API 配置（可以根据实际情况修改）
 DEFAULT_API_URL = "https://api.openai.com/v1/chat/completions"
@@ -14,6 +15,10 @@ API_KEY_ENV_VAR = "LLM_API_KEY"
 
 # 使用项目根目录已有的 config.json 文件
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+
+# 配置LLM调用日志
+llm_logger = logging.getLogger('llm_calls')
+llm_logger.setLevel(logging.INFO)
 
 
 def load_config():
@@ -66,6 +71,9 @@ def refine_prompt_with_llm(prompt, language="zh"):
     Returns:
         str: 润色后的提示词，如果失败则返回原始提示词
     """
+    import time
+    start_time = time.time()
+    
     if not prompt or not prompt.strip():
         return prompt
 
@@ -73,7 +81,12 @@ def refine_prompt_with_llm(prompt, language="zh"):
     api_key = config.get("llm_api_key") or os.getenv(API_KEY_ENV_VAR)
     
     if not api_key:
-        raise ValueError("未配置 LLM API Key。请在 config.json 中设置 llm_api_key 或在环境变量中设置 LLM_API_KEY。")
+        error_msg = "未配置 LLM API Key。请在 config.json 中设置 llm_api_key 或在环境变量中设置 LLM_API_KEY。"
+        llm_logger.error(error_msg)
+        raise ValueError(error_msg)
+    
+    # 记录提示词润色开始
+    llm_logger.info(f"开始润色提示词 - 原始长度: {len(prompt)}, 语言: {language}")
 
     # 构建系统提示词
     system_instruction = (
@@ -112,14 +125,27 @@ def refine_prompt_with_llm(prompt, language="zh"):
             timeout=30
         )
         
+        # 记录API响应
+        llm_logger.info(f"提示词润色API响应 - 状态码: {response.status_code}")
+        
         if response.status_code == 200:
             result = response.json()
             refined_text = result["choices"][0]["message"]["content"].strip()
+            
+            # 计算并记录耗时
+            elapsed_time = time.time() - start_time
+            llm_logger.info(f"提示词润色成功 - 原始长度: {len(prompt)}, 润色后长度: {len(refined_text)}, 耗时: {elapsed_time:.2f}秒")
             return refined_text
         else:
+            elapsed_time = time.time() - start_time
             error_msg = response.json().get("error", {}).get("message", "Unknown error")
-            raise Exception(f"API 请求失败: {response.status_code} - {error_msg}")
+            full_error = f"API 请求失败: {response.status_code} - {error_msg} - 耗时: {elapsed_time:.2f}秒"
+            llm_logger.error(full_error)
+            raise Exception(full_error)
             
     except requests.exceptions.RequestException as e:
-        raise Exception(f"网络请求错误: {str(e)}")
+        elapsed_time = time.time() - start_time
+        error_msg = f"网络请求错误: {str(e)} - 耗时: {elapsed_time:.2f}秒"
+        llm_logger.error(error_msg)
+        raise Exception(error_msg)
 

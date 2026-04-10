@@ -46,13 +46,26 @@ def init_database():
         table_exists = cursor.fetchone()
         
         if table_exists:
-            # 检查表结构是否包含 user_id 字段
+            # 检查表结构是否包含必要的字段
             cursor.execute("PRAGMA table_info(generation_history)")
             columns = [row[1] for row in cursor.fetchall()]
+            
+            needs_rebuild = False
             
             if 'user_id' not in columns and 'uid' in columns:
                 # 旧表结构，需要重建
                 print("检测到旧表结构，正在重建...")
+                needs_rebuild = True
+            elif 'is_nsfw' not in columns:
+                # 缺少 is_nsfw 字段，需要添加
+                print("检测到缺少 is_nsfw 字段，正在添加...")
+                try:
+                    cursor.execute('ALTER TABLE generation_history ADD COLUMN is_nsfw INTEGER DEFAULT 0')
+                    print("is_nsfw 字段添加成功")
+                except Exception as e:
+                    print(f"添加 is_nsfw 字段失败: {e}")
+            
+            if needs_rebuild:
                 cursor.execute('DROP TABLE IF EXISTS generation_history')
                 cursor.execute('DROP TABLE IF EXISTS users')
                 table_exists = None
@@ -74,6 +87,7 @@ def init_database():
                     seed INTEGER DEFAULT -1,
                     elapsed_time REAL,
                     rating INTEGER DEFAULT 0,
+                    is_nsfw INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
@@ -109,6 +123,11 @@ def init_database():
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_history_rating 
             ON generation_history(rating)
+        ''')
+        
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_history_nsfw 
+            ON generation_history(is_nsfw)
         ''')
         
         print("数据库初始化完成")
@@ -202,7 +221,7 @@ def add_history_record(record):
         return cursor.lastrowid
 
 
-def get_user_history(user_id, limit=50, offset=0, date_filter=None, rating_filter=None):
+def get_user_history(user_id, limit=50, offset=0, date_filter=None, rating_filter=None, min_rating=None, exclude_bad=False, show_nsfw=False):
     """获取指定用户的历史记录
     
     Args:
@@ -211,6 +230,9 @@ def get_user_history(user_id, limit=50, offset=0, date_filter=None, rating_filte
         offset (int): 偏移量（用于分页）
         date_filter (str, optional): 日期筛选，格式 YYYY-MM-DD
         rating_filter (int or list, optional): 评分筛选（-1为bad，1-5为星级），支持单个值或列表
+        min_rating (int, optional): 最低星级筛选（1-3），例如1表示一星及以上
+        exclude_bad (bool): 是否排除Bad图片（rating=-1），默认为False
+        show_nsfw (bool): 是否显示NSFW内容，默认为False
     
     Returns:
         list: 历史记录列表（字典形式）
@@ -237,6 +259,24 @@ def get_user_history(user_id, limit=50, offset=0, date_filter=None, rating_filte
                 conditions.append('rating = ?')
                 params.append(rating_filter)
         
+        if min_rating is not None:
+            # 最低星级筛选
+            if min_rating == 0:
+                # 未评分（rating = 0）
+                conditions.append('rating = 0')
+            else:
+                # 星级筛选（>= min_rating）
+                conditions.append('rating >= ?')
+                params.append(min_rating)
+        
+        if exclude_bad:
+            # 排除Bad图片（rating != -1）
+            conditions.append('rating != -1')
+        
+        # 默认隐藏NSFW内容
+        if not show_nsfw:
+            conditions.append('is_nsfw = 0')
+        
         where_clause = ' AND '.join(conditions)
         
         query = f'''
@@ -253,7 +293,7 @@ def get_user_history(user_id, limit=50, offset=0, date_filter=None, rating_filte
         return [dict(row) for row in rows]
 
 
-def get_all_history(limit=100, offset=0, date_filter=None, rating_filter=None):
+def get_all_history(limit=100, offset=0, date_filter=None, rating_filter=None, min_rating=None, exclude_bad=False, show_nsfw=False):
     """获取所有用户的历史记录
     
     Args:
@@ -261,6 +301,9 @@ def get_all_history(limit=100, offset=0, date_filter=None, rating_filter=None):
         offset (int): 偏移量（用于分页）
         date_filter (str, optional): 日期筛选，格式 YYYY-MM-DD
         rating_filter (int or list, optional): 评分筛选（-1为bad，1-5为星级），支持单个值或列表
+        min_rating (int, optional): 最低星级筛选（1-3），例如1表示一星及以上
+        exclude_bad (bool): 是否排除Bad图片（rating=-1），默认为False
+        show_nsfw (bool): 是否显示NSFW内容，默认为False
     
     Returns:
         list: 历史记录列表（字典形式）
@@ -286,6 +329,24 @@ def get_all_history(limit=100, offset=0, date_filter=None, rating_filter=None):
             else:
                 conditions.append('rating = ?')
                 params.append(rating_filter)
+        
+        if min_rating is not None:
+            # 最低星级筛选
+            if min_rating == 0:
+                # 未评分（rating = 0）
+                conditions.append('rating = 0')
+            else:
+                # 星级筛选（>= min_rating）
+                conditions.append('rating >= ?')
+                params.append(min_rating)
+        
+        if exclude_bad:
+            # 排除Bad图片（rating != -1）
+            conditions.append('rating != -1')
+        
+        # 默认隐藏NSFW内容
+        if not show_nsfw:
+            conditions.append('is_nsfw = 0')
         
         where_clause = ' AND '.join(conditions) if conditions else '1=1'
         
@@ -350,13 +411,16 @@ def clear_user_history(user_id):
         return cursor.rowcount
 
 
-def get_history_count(user_id=None, date_filter=None, rating_filter=None):
+def get_history_count(user_id=None, date_filter=None, rating_filter=None, min_rating=None, exclude_bad=False, show_nsfw=False):
     """获取历史记录数量
     
     Args:
         user_id (int, optional): 用户 ID，如果为 None 则统计所有用户
         date_filter (str, optional): 日期筛选，格式 YYYY-MM-DD
         rating_filter (int or list, optional): 评分筛选（-1为bad，1-5为星级），支持单个值或列表
+        min_rating (int, optional): 最低星级筛选（1-3），例如1表示一星及以上
+        exclude_bad (bool): 是否排除Bad图片（rating=-1），默认为False
+        show_nsfw (bool): 是否显示NSFW内容，默认为False
     
     Returns:
         int: 记录数量
@@ -387,6 +451,24 @@ def get_history_count(user_id=None, date_filter=None, rating_filter=None):
                 conditions.append('rating = ?')
                 params.append(rating_filter)
         
+        if min_rating is not None:
+            # 最低星级筛选
+            if min_rating == 0:
+                # 未评分（rating = 0）
+                conditions.append('rating = 0')
+            else:
+                # 星级筛选（>= min_rating）
+                conditions.append('rating >= ?')
+                params.append(min_rating)
+        
+        if exclude_bad:
+            # 排除Bad图片（rating != -1）
+            conditions.append('rating != -1')
+        
+        # 默认隐藏NSFW内容
+        if not show_nsfw:
+            conditions.append('is_nsfw = 0')
+        
         where_clause = ' AND '.join(conditions) if conditions else '1=1'
         
         query = f'SELECT COUNT(*) as count FROM generation_history WHERE {where_clause}'
@@ -413,6 +495,149 @@ def update_rating(image_id, rating):
             SET rating = ? 
             WHERE image_id = ?
         ''', (rating, image_id))
+        return cursor.rowcount > 0
+
+
+def update_history_record(image_id, updates):
+    """更新历史记录的指定字段
+    
+    Args:
+        image_id (str): 图片 ID
+        updates (dict): 要更新的字段字典，如 {'elapsed_time': 10.5, 'seed': 12345}
+    
+    Returns:
+        bool: 更新是否成功
+    """
+    if not updates:
+        return False
+    
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        # 构建动态UPDATE语句
+        set_clauses = []
+        params = []
+        for key, value in updates.items():
+            set_clauses.append(f"{key} = ?")
+            params.append(value)
+        
+        params.append(image_id)
+        set_clause = ", ".join(set_clauses)
+        
+        query = f"UPDATE generation_history SET {set_clause} WHERE image_id = ?"
+        cursor.execute(query, params)
+        return cursor.rowcount > 0
+
+
+def delete_history_record(image_id):
+    """删除历史记录
+    
+    Args:
+        image_id (str): 图片 ID
+    
+    Returns:
+        bool: 删除是否成功
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM generation_history WHERE image_id = ?', (image_id,))
+        return cursor.rowcount > 0
+
+
+def cleanup_incomplete_records(images_dir=None):
+    """清理不完整的记录（图片文件不存在但数据库中有记录）
+    
+    通常在程序启动时调用，用于清理因程序崩溃而留下的孤儿记录。
+    
+    Args:
+        images_dir (str, optional): 图片目录路径，默认为项目根目录下的 generated_images
+    
+    Returns:
+        dict: 包含 cleaned_count（清理数量）和 orphaned_ids（孤儿记录ID列表）
+    """
+    import os
+    
+    if images_dir is None:
+        images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated_images')
+    
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        # 获取所有记录
+        cursor.execute('SELECT id, image_id, image_filename FROM generation_history')
+        rows = cursor.fetchall()
+        
+        orphaned_ids = []
+        cleaned_count = 0
+        
+        for row in rows:
+            image_filename = row['image_filename']
+            image_path = os.path.join(images_dir, image_filename)
+            
+            # 检查图片文件是否存在
+            if not os.path.exists(image_path):
+                # 图片文件不存在，这是孤儿记录
+                orphaned_ids.append(row['image_id'])
+                cursor.execute('DELETE FROM generation_history WHERE id = ?', (row['id'],))
+                cleaned_count += 1
+        
+        if cleaned_count > 0:
+            print(f"清理了 {cleaned_count} 条不完整的历史记录")
+        
+        return {
+            'cleaned_count': cleaned_count,
+            'orphaned_ids': orphaned_ids
+        }
+
+
+def toggle_nsfw(image_id):
+    """切换图片的NSFW标记
+    
+    Args:
+        image_id (str): 图片 ID
+    
+    Returns:
+        tuple: (success: bool, new_nsfw_value: int)
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        # 先获取当前值
+        cursor.execute('SELECT is_nsfw FROM generation_history WHERE image_id = ?', (image_id,))
+        row = cursor.fetchone()
+        if not row:
+            return False, 0
+        
+        current_nsfw = row['is_nsfw']
+        new_nsfw = 1 if current_nsfw == 0 else 0
+        
+        cursor.execute('''
+            UPDATE generation_history 
+            SET is_nsfw = ? 
+            WHERE image_id = ?
+        ''', (new_nsfw, image_id))
+        return cursor.rowcount > 0, new_nsfw
+
+
+def update_nsfw_status(image_id, is_nsfw):
+    """直接设置图片的NSFW状态
+    
+    Args:
+        image_id (str): 图片 ID
+        is_nsfw (bool): 是否标记为NSFW
+    
+    Returns:
+        bool: 更新成功返回True，失败返回False
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        nsfw_value = 1 if is_nsfw else 0
+        
+        cursor.execute('''
+            UPDATE generation_history 
+            SET is_nsfw = ? 
+            WHERE image_id = ?
+        ''', (nsfw_value, image_id))
+        
         return cursor.rowcount > 0
 
 

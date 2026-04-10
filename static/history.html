@@ -471,11 +471,32 @@
             display: flex;
         }
 
-        /* Rating Stars */
+        /* Rating Dropdown */
+        .rating-select {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+
+        .rating-select:hover {
+            border-color: #667eea;
+        }
+
+        .rating-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
         .rating-container {
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 6px;
             margin-top: 6px;
             padding: 0 8px 8px;
         }
@@ -489,35 +510,116 @@
             border-radius: 4px;
         }
 
-        .star {
+        .nsfw-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ff5722;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* NSFW图标按钮 - 在图片右上角 */
+        .nsfw-icon-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            font-size: 15px;
             cursor: pointer;
-            font-size: 14px;
-            color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.2s;
-            user-select: none;
+            z-index: 11;
         }
 
-        .star:hover,
-        .star.active {
-            color: #ffc107;
-            transform: scale(1.1);
+        .nsfw-icon-btn:hover {
+            transform: scale(1.15);
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        .bad-rating {
+        .nsfw-icon-btn.nsfw-active {
+            /* NSFW状态保持透明背景 */
+        }
+
+        .nsfw-icon-btn.nsfw-active:hover {
+            background: rgba(255, 87, 34, 0.3);
+        }
+
+        /* Switch Toggle */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .switch-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
             cursor: pointer;
-            font-size: 16px;
-            color: #ccc;
-            transition: all 0.2s;
-            user-select: none;
-            margin-left: 4px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 24px;
         }
 
-        .bad-rating:hover {
-            color: #f44336;
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
         }
 
-        .bad-rating.active {
-            color: #f44336;
+        input:checked + .slider {
+            background-color: #ff5722;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .slider:hover {
+            background-color: #bbb;
+        }
+
+        input:checked + .slider:hover {
+            background-color: #e64a19;
         }
 
         /* Filter Section */
@@ -601,42 +703,48 @@
             min-width: 80px;
         }
 
-        .rating-filter-options {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .rating-filter-btn {
+        /* Rating Dropdown Filter */
+        .rating-filter-select {
             padding: 6px 12px;
             border: 2px solid #e0e0e0;
             border-radius: 6px;
-            background: white;
-            cursor: pointer;
             font-size: 13px;
+            cursor: pointer;
+            background: white;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            min-width: 140px;
         }
 
-        .rating-filter-btn:hover {
+        .rating-filter-select:hover {
             border-color: #667eea;
-            background: #f0f4ff;
         }
 
-        .rating-filter-btn.active {
+        .rating-filter-select:focus {
+            outline: none;
             border-color: #667eea;
-            background: #667eea;
-            color: white;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
         }
 
-        .rating-filter-btn .stars {
-            color: #ffc107;
+        /* Rating Dropdown Filter */
+        .rating-filter-select {
+            padding: 6px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+            min-width: 140px;
         }
 
-        .rating-filter-btn.active .stars {
-            color: white;
+        .rating-filter-select:hover {
+            border-color: #667eea;
+        }
+
+        .rating-filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
         }
 
         .delete-bad-inline {
@@ -660,6 +768,30 @@
         .delete-bad-inline:hover {
             background: #e64a19;
             transform: translateY(-1px);
+        }
+
+        .rating-filter-btn-bad {
+            padding: 6px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rating-filter-btn-bad:hover {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .rating-filter-btn-bad.active {
+            border-color: #f44336;
+            background: #f44336;
+            color: white;
         }
 
         /* Custom Modal Styles */
@@ -816,25 +948,30 @@
                     <!-- Rating Filter -->
                     <div class="filter-row">
                         <span class="filter-label">⭐ 星级筛选:</span>
-                        <div class="rating-filter-options">
-                            <button class="rating-filter-btn" data-rating="" onclick="selectRatingFilter('')">
-                                全部
-                            </button>
-                            <button class="rating-filter-btn" data-rating="3" onclick="selectRatingFilter(3)">
-                                <span class="stars">★★★</span>
-                            </button>
-                            <button class="rating-filter-btn" data-rating="2" onclick="selectRatingFilter(2)">
-                                <span class="stars">★★</span>
-                            </button>
-                            <button class="rating-filter-btn" data-rating="1" onclick="selectRatingFilter(1)">
-                                <span class="stars">★</span>
-                            </button>
-                            <button class="rating-filter-btn" data-rating="-1" onclick="selectRatingFilter(-1)">
-                                👎
-                            </button>
-                            <button class="delete-bad-inline" id="deleteBadBtn" onclick="deleteBadImages()" title="删除所有标记为Bad的图片">
-                                🗑️ 删除标记Bad的图片
-                            </button>
+                        <select class="rating-filter-select" id="ratingFilterSelect" onchange="selectRatingFilter(this.value)">
+                            <option value="">全部</option>
+                            <option value="0">未评分</option>
+                            <option value="1">⭐</option>
+                            <option value="2">⭐⭐</option>
+                            <option value="3">⭐⭐⭐</option>
+                        </select>
+                        <button class="rating-filter-btn-bad" id="badFilterBtn" data-rating="-1" onclick="toggleBadFilter()">
+                            👎
+                        </button>
+                        <button class="delete-bad-inline" id="deleteBadBtn" onclick="deleteBadImages()" title="删除所有标记为Bad的图片">
+                            🗑️ 删除标记Bad的图片
+                        </button>
+                    </div>
+
+                    <!-- NSFW Filter -->
+                    <div class="filter-row">
+                        <span class="filter-label">🔞 NSFW:</span>
+                        <div class="switch-container">
+                            <label class="switch">
+                                <input type="checkbox" id="nsfwToggle" onchange="toggleNsfwDisplay(this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="switch-label" id="nsfwStatusLabel">隐藏</span>
                         </div>
                     </div>
                 </div>
@@ -877,7 +1014,9 @@
         let userId = null;
         let showAllUsers = false;
         let currentDateFilter = '';
-        let currentRatingFilters = new Set(); // 改为Set支持多选
+        let currentRatingFilter = null; // 默认不选择任何评级（显示全部）
+        let isBadFilterActive = false; // Bad筛选是否激活
+        let showNsfwContent = false; // 默认隐藏NSFW内容
         let availableDates = [];
 
         // Initialize user ID
@@ -1094,34 +1233,120 @@
             }
         }
 
-        // Select rating filter (支持多选)
-        function selectRatingFilter(rating) {
-            const ratingValue = rating === '' ? null : parseInt(rating);
+        // Toggle NSFW display
+        function toggleNsfwDisplay(show) {
+            showNsfwContent = show;
             
-            if (ratingValue === null) {
-                // 点击"全部"，清空所有选择
-                currentRatingFilters.clear();
-            } else {
-                // 切换该评级的选中状态
-                if (currentRatingFilters.has(ratingValue)) {
-                    currentRatingFilters.delete(ratingValue);
+            // Update UI
+            const toggle = document.getElementById('nsfwToggle');
+            const statusLabel = document.getElementById('nsfwStatusLabel');
+            if (toggle) {
+                toggle.checked = show;
+            }
+            if (statusLabel) {
+                statusLabel.textContent = show ? '显示' : '隐藏';
+            }
+            
+            // Load history with new filter
+            loadHistory();
+        }
+
+        // Toggle NSFW for image
+        async function toggleNsfw(imageId) {
+            // Save current scroll position
+            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/nsfw`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-ID': userId || ''
+                    },
+                    body: JSON.stringify({
+                        image_id: imageId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(result.is_nsfw ? 'Marked as NSFW' : 'Unmarked NSFW');
+                    // Reload history to show updated status
+                    await loadHistory();
+                    // Restore scroll position
+                    window.scrollTo(0, scrollPosition);
                 } else {
-                    currentRatingFilters.add(ratingValue);
+                    showToast('Failed: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Failed to toggle NSFW:', error);
+                showToast('Failed: ' + error.message);
+            }
+        }
+
+        // Select rating filter (下拉选项)
+        function selectRatingFilter(rating) {
+            // 处理"全部"选项（空字符串）
+            if (rating === '' || rating === null || rating === undefined) {
+                currentRatingFilter = null;
+                isBadFilterActive = false;
+                
+                // 更新Bad按钮状态
+                const badBtn = document.getElementById('badFilterBtn');
+                if (badBtn) {
+                    badBtn.classList.remove('active');
+                }
+            } else {
+                const ratingValue = parseInt(rating);
+                
+                // 如果选择了星级或未评分，取消Bad筛选
+                if ((ratingValue >= 0 && ratingValue <= 3)) {
+                    currentRatingFilter = ratingValue;
+                    isBadFilterActive = false;
+                    
+                    // 更新Bad按钮状态
+                    const badBtn = document.getElementById('badFilterBtn');
+                    if (badBtn) {
+                        badBtn.classList.remove('active');
+                    }
+                }
+            }
+            
+            // Show/hide delete bad button
+            updateDeleteBadButtonVisibility();
+            
+            // Load history with new filters
+            loadHistory();
+        }
+
+        // Toggle Bad filter
+        function toggleBadFilter() {
+            isBadFilterActive = !isBadFilterActive;
+            
+            // 如果激活Bad筛选，重置星级筛选
+            if (isBadFilterActive) {
+                currentRatingFilter = null;
+                
+                // 重置下拉框
+                const select = document.getElementById('ratingFilterSelect');
+                if (select) {
+                    select.value = '';
+                }
+            } else {
+                // 取消Bad筛选，恢复默认（不选择）
+                currentRatingFilter = null;
+                const select = document.getElementById('ratingFilterSelect');
+                if (select) {
+                    select.value = '';
                 }
             }
             
             // Update UI
-            document.querySelectorAll('.rating-filter-btn').forEach(btn => {
-                const btnRating = btn.dataset.rating === '' ? null : parseInt(btn.dataset.rating);
-                
-                if (btnRating === null) {
-                    // "全部"按钮：只有当没有任何选择时才高亮
-                    btn.classList.toggle('active', currentRatingFilters.size === 0);
-                } else {
-                    // 星级按钮：根据是否在Set中来决定高亮
-                    btn.classList.toggle('active', currentRatingFilters.has(btnRating));
-                }
-            });
+            const badBtn = document.getElementById('badFilterBtn');
+            if (badBtn) {
+                badBtn.classList.toggle('active', isBadFilterActive);
+            }
             
             // Show/hide delete bad button
             updateDeleteBadButtonVisibility();
@@ -1133,12 +1358,30 @@
         // Update delete bad button visibility
         function updateDeleteBadButtonVisibility() {
             const deleteBtn = document.getElementById('deleteBadBtn');
-            // 只有当只选择了Bad(-1)且没有其他选择时才显示删除按钮
-            if (currentRatingFilters.size === 1 && currentRatingFilters.has(-1)) {
+            // 只有当Bad筛选激活时才显示删除按钮
+            if (isBadFilterActive) {
                 deleteBtn.classList.add('show');
             } else {
                 deleteBtn.classList.remove('show');
             }
+        }
+
+        // Update rating filter UI based on current selection
+        function updateRatingFilterUI() {
+            // 设置下拉框的值
+            const select = document.getElementById('ratingFilterSelect');
+            if (select && currentRatingFilter) {
+                select.value = currentRatingFilter.toString();
+            }
+            
+            // 设置Bad按钮状态
+            const badBtn = document.getElementById('badFilterBtn');
+            if (badBtn) {
+                badBtn.classList.toggle('active', isBadFilterActive);
+            }
+            
+            // Show/hide delete bad button
+            updateDeleteBadButtonVisibility();
         }
 
         // Rate image
@@ -1205,11 +1448,19 @@
                 if (result.success) {
                     showToast(`成功删除 ${result.deleted_count} 张 Bad 图片`);
                     // Clear rating filter and reload
-                    currentRatingFilters.clear();
-                    document.querySelectorAll('.rating-filter-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    document.querySelector('.rating-filter-btn[data-rating=""]').classList.add('active');
+                    isBadFilterActive = false;
+                    currentRatingFilter = null;
+                    
+                    // 更新UI
+                    const select = document.getElementById('ratingFilterSelect');
+                    if (select) {
+                        select.value = '';
+                    }
+                    const badBtn = document.getElementById('badFilterBtn');
+                    if (badBtn) {
+                        badBtn.classList.remove('active');
+                    }
+                    
                     updateDeleteBadButtonVisibility();
                     loadHistory();
                 } else {
@@ -1241,10 +1492,21 @@
                     params.push(`date=${currentDateFilter}`);
                 }
                 
-                // 支持多星级筛选，将Set转换为数组并拼接
-                if (currentRatingFilters.size > 0) {
-                    const ratings = Array.from(currentRatingFilters).join(',');
-                    params.push(`rating=${ratings}`);
+                // 支持星级筛选和Bad筛选
+                if (isBadFilterActive) {
+                    // Bad筛选
+                    params.push('rating=-1');
+                } else if (currentRatingFilter !== null && currentRatingFilter !== undefined) {
+                    // 星级筛选或未评分（0, 1, 2, 3）
+                    params.push(`min_rating=${currentRatingFilter}`);
+                } else {
+                    // "全部"选项：排除Bad，显示无评分和1星及以上
+                    params.push('exclude_bad=true');
+                }
+                
+                // NSFW显示参数
+                if (showNsfwContent) {
+                    params.push('show_nsfw=true');
                 }
                 
                 url += params.join('&');
@@ -1279,12 +1541,16 @@
             const grid = document.getElementById('historyGrid');
             grid.innerHTML = history.map(item => {
                 const rating = item.rating || 0;
+                const isNsfw = item.is_nsfw || 0;
                 const imageId = item.image_id || item.id;
                 const starsHtml = generateStarsHtml(rating, imageId);
+                const nsfwIcon = isNsfw ? '🔞' : '✅';
+                const nsfwBtnClass = isNsfw ? 'nsfw-icon-btn nsfw-active' : 'nsfw-icon-btn';
                 
                 return `
                     <div class="history-item">
                         <img src="${item.image_url}" alt="Generated Image" loading="lazy" onclick="openImage('${item.image_url}')">
+                        <button class="${nsfwBtnClass}" onclick="event.stopPropagation(); toggleNsfw('${imageId}')" title="${isNsfw ? '取消NSFW标记' : '标记为NSFW'}">${nsfwIcon}</button>
                         <div class="history-item-info">
                             <div class="history-item-prompt" onclick="event.stopPropagation(); copyToClipboard('${escapeHtml(item.prompt || '无提示词')}', '提示词')">${escapeHtml(item.prompt || '无提示词')}</div>
                             <div class="history-item-meta">
@@ -1302,21 +1568,23 @@
         }
 
         function generateStarsHtml(rating, imageId) {
-            let html = '';
+            // 创建下拉选择框，全部使用emoji星星
+            const options = [
+                { value: 0, label: '☆☆☆' },
+                { value: 1, label: '⭐☆☆' },
+                { value: 2, label: '⭐⭐☆' },
+                { value: 3, label: '⭐⭐⭐' },
+                { value: -1, label: '👎' }
+            ];
             
-            // Generate 3 stars (simplified)
-            const maxStars = 3;
-            for (let i = 1; i <= maxStars; i++) {
-                const isActive = i <= rating && rating > 0;
-                html += `<span class="star ${isActive ? 'active' : ''}" onclick="event.stopPropagation(); rateImage('${imageId}', ${i})">★</span>`;
-            }
+            let html = `<select class="rating-select" onchange="event.stopPropagation(); rateImage('${imageId}', parseInt(this.value))">`;
             
-            // Add bad rating button (emoji only)
-            const isBadActive = rating === -1;
-            const badIcon = isBadActive ? '❌' : '👎';
-            // Click on active bad rating will clear it (set to 0)
-            const clickAction = isBadActive ? `rateImage('${imageId}', 0)` : `rateImage('${imageId}', -1)`;
-            html += `<span class="bad-rating ${isBadActive ? 'active' : ''}" onclick="event.stopPropagation(); ${clickAction}" title="${isBadActive ? '取消Bad标记' : '标记为Bad'}">${badIcon}</span>`;
+            options.forEach(option => {
+                const selected = rating === option.value ? 'selected' : '';
+                html += `<option value="${option.value}" ${selected}>${option.label}</option>`;
+            });
+            
+            html += `</select>`;
             
             return html;
         }
@@ -1453,6 +1721,21 @@
                 console.error('Error during initialization:', error);
                 // 出错时也清除日期筛选
                 currentDateFilter = '';
+            }
+            
+            // 初始化星级筛选的UI状态（默认不选择）
+            currentRatingFilter = null;
+            isBadFilterActive = false;
+            updateRatingFilterUI();
+            
+            // 初始化NSFW显示开关的UI状态（默认隐藏）
+            const nsfwToggle = document.getElementById('nsfwToggle');
+            const nsfwStatusLabel = document.getElementById('nsfwStatusLabel');
+            if (nsfwToggle) {
+                nsfwToggle.checked = false;
+            }
+            if (nsfwStatusLabel) {
+                nsfwStatusLabel.textContent = '隐藏';
             }
             
             // 加载历史记录

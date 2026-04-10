@@ -7,6 +7,7 @@ import os
 import json
 import time
 import base64
+import logging
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -15,6 +16,9 @@ import requests
 # 导入数据库模块
 from database import (
     add_history_record,
+    update_history_record,
+    delete_history_record,
+    cleanup_incomplete_records,
     migrate_from_json,
     get_history_count,
     get_or_create_user,
@@ -37,8 +41,53 @@ import threading
 generating_count = 0
 count_lock = threading.Lock()
 
+# 启动定期清理任务
+def start_cleanup_scheduler(interval_hours=24):
+    """启动定期清理不完整记录的后台任务
+    
+    Args:
+        interval_hours (int): 清理间隔（小时），默认24小时
+    """
+    import time
+    
+    def cleanup_task():
+        while True:
+            time.sleep(interval_hours * 3600)  # 转换为秒
+            try:
+                print(f"\n[定时清理] 开始检查不完整记录...")
+                result = cleanup_incomplete_records(IMAGES_DIR)
+                if result['cleaned_count'] > 0:
+                    print(f"[定时清理] ✅ 已清理 {result['cleaned_count']} 条不完整记录")
+                else:
+                    print(f"[定时清理] ✅ 没有发现不完整的记录")
+            except Exception as e:
+                print(f"[定时清理] ⚠️  清理出错: {e}")
+    
+    # 启动守护线程
+    thread = threading.Thread(target=cleanup_task, daemon=True)
+    thread.start()
+    print(f"已启动定期清理任务（每{interval_hours}小时执行一次）")
+
 # 存储生成图片的目录
 IMAGES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated_images')
+# 创建日志目录
+LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# 配置图片生成日志
+image_logger = logging.getLogger('image_generation')
+image_logger.setLevel(logging.INFO)
+image_handler = logging.FileHandler(os.path.join(LOG_DIR, 'image_generation.log'), encoding='utf-8')
+image_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+image_logger.addHandler(image_handler)
+
+# 配置LLM调用日志
+llm_logger = logging.getLogger('llm_calls')
+llm_logger.setLevel(logging.INFO)
+llm_handler = logging.FileHandler(os.path.join(LOG_DIR, 'llm_calls.log'), encoding='utf-8')
+llm_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+llm_logger.addHandler(llm_handler)
+
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
 # 存储耗时统计数据的文件
@@ -286,6 +335,41 @@ def check_status():
         }), 500
 
 
+@app.route('/api/estimate_time', methods=['POST'])
+def estimate_time():
+    """预估图片生成时间
+    
+    根据图片尺寸、步数和用户历史记录预估生成时间。
+    
+    Returns:
+        Response: JSON 响应，包含 estimated_time（秒）
+    """
+    try:
+        params = request.json
+        width = params.get("width", 512)
+        height = params.get("height", 512)
+        steps = params.get("steps", 8)
+        
+        # 获取用户 ID
+        user_id = get_user_id()
+        
+        # 计算预估时间
+        estimation = estimate_generation_time(width, height, steps, user_id)
+        
+        return jsonify({
+            "success": True,
+            "estimated_time": estimation["estimated_time"],
+            "base_time": estimation["base_time"],
+            "pixel_ratio": estimation["pixel_ratio"],
+            "step_ratio": estimation["step_ratio"]
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 @app.route('/api/generate', methods=['POST'])
 def generate_image():
     """生成图片
@@ -299,11 +383,21 @@ def generate_image():
     drawthings_url = load_config()
     start_time = time.time()
     
-    # 增加并发计数
+    # 检查当前正在生成的任务数量
     global generating_count
     with count_lock:
-        generating_count += 1
         current_count = generating_count
+        if current_count >= 5:
+            return jsonify({
+                "success": False,
+                "error": f"当前已有 {current_count} 个任务正在生成中，请稍后再试（最多允许5个并发任务）"
+            }), 429
+        # 增加并发计数
+        generating_count += 1
+    
+    # 初始化 user_id 和 seed 变量，避免在异常处理中未定义
+    user_id = None
+    seed = -1
 
     try:
         # 获取请求参数
@@ -318,6 +412,41 @@ def generate_image():
         steps = params.get("steps", 8)
         estimation = estimate_generation_time(width, height, steps, user_id)
 
+        # 记录图片生成开始
+        image_logger.info(f"开始生成图片 - 用户ID: {user_id}, 尺寸: {width}x{height}, 步数: {steps}, Seed: {params.get('seed', -1)}")
+        
+        # 生成唯一ID用于NSFW检测和历史记录（在转发请求前）
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # 先创建初始历史记录（is_nsfw默认为0，后续NSFW检测会更新它）
+        if user_id:
+            initial_record = {
+                "user_id": user_id,
+                "id": timestamp,
+                "image_url": f"/generated_images/generated_{timestamp}.png",
+                "image_filename": f"generated_{timestamp}.png",
+                "prompt": params.get("prompt", ""),
+                "negative_prompt": params.get("negative_prompt", ""),
+                "width": width,
+                "height": height,
+                "steps": steps,
+                "seed": params.get("seed", -1),
+                "elapsed_time": 0,
+                "rating": 0,
+                "created_at": datetime.now().isoformat()
+            }
+            add_history_record(initial_record)
+            image_logger.info(f"已创建初始历史记录 - image_id: {timestamp}")
+        
+        # 异步进行NSFW检测（如果配置了LLM）- 在转发请求前执行
+        try:
+            from llm_client import async_detect_nsfw
+            prompt = params.get("prompt", "")
+            negative_prompt = params.get("negative_prompt", "")
+            async_detect_nsfw(prompt, negative_prompt, timestamp)
+        except Exception as e:
+            print(f"启动NSFW检测失败: {e}")
+        
         # 转发请求到 DrawThings 服务
         drawthings_response = requests.post(
             f"{drawthings_url}/sdapi/v1/txt2img",
@@ -339,8 +468,7 @@ def generate_image():
         else:
             raise Exception("响应中没有图片数据")
 
-        # 生成临时文件名并保存图片
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # 使用之前生成的timestamp创建文件名并保存图片
         image_filename = f"generated_{timestamp}.png"
         image_path = os.path.join(IMAGES_DIR, image_filename)
 
@@ -348,18 +476,6 @@ def generate_image():
         image_data = base64.b64decode(image_base64)
         with open(image_path, 'wb') as f:
             f.write(image_data)
-
-        # 计算耗时
-        elapsed_time = time.time() - start_time
-
-        # 更新耗时统计
-        stats = load_timing_stats()
-        stats["times"].append(elapsed_time)
-        # 只保留最近 100 条记录，防止文件过大
-        if len(stats["times"]) > 100:
-            stats["times"] = stats["times"][-100:]
-        stats["average_time"] = calculate_average_time(stats["times"])
-        save_timing_stats(stats)
 
         # 获取 seed 值 - 通过请求 DrawThings 状态接口获取
         seed = -1
@@ -372,26 +488,33 @@ def generate_image():
                     seed = status_data["seed"]
         except Exception as e:
             print(f"从状态接口获取 seed 时出错: {e}")
+        
+        # 计算耗时
+        elapsed_time = time.time() - start_time
+        
+        # 记录图片生成成功
+        image_logger.info(f"图片生成成功 - 文件名: {image_filename}, 耗时: {elapsed_time:.2f}秒, Seed: {seed}")
 
-        # 保存到历史记录（使用数据库）- 只有在有用户ID时才保存
+        # 更新耗时统计
+        stats = load_timing_stats()
+        stats["times"].append(elapsed_time)
+        # 只保留最近 100 条记录，防止文件过大
+        if len(stats["times"]) > 100:
+            stats["times"] = stats["times"][-100:]
+        stats["average_time"] = calculate_average_time(stats["times"])
+        save_timing_stats(stats)
+
+        # 更新历史记录中的实际数据（耗时、seed等）
         if user_id:
-            history_record = {
-                "user_id": user_id,
-                "id": timestamp,
-                "image_url": f"/generated_images/{image_filename}",
-                "image_filename": image_filename,
-                "prompt": params.get("prompt", ""),
-                "negative_prompt": params.get("negative_prompt", ""),
-                "width": params.get("width", 512),
-                "height": params.get("height", 512),
-                "steps": params.get("steps", 8),
-                "seed": seed,
-                "elapsed_time": round(elapsed_time, 2),
-                "created_at": datetime.now().isoformat()
+            updates = {
+                'elapsed_time': round(elapsed_time, 2),
+                'seed': seed
             }
-            add_history_record(history_record)
-        else:
-            print("警告: 没有用户 ID，图片不会保存到历史记录")
+            success = update_history_record(timestamp, updates)
+            if success:
+                image_logger.info(f"已更新历史记录 - image_id: {timestamp}, 耗时: {elapsed_time:.2f}秒, Seed: {seed}")
+            else:
+                image_logger.warning(f"更新历史记录失败 - image_id: {timestamp}")
 
         # 返回图片路径和元数据
         return jsonify({
@@ -406,6 +529,11 @@ def generate_image():
 
     except requests.exceptions.Timeout:
         elapsed_time = time.time() - start_time
+        image_logger.error(f"图片生成超时 - 耗时: {elapsed_time:.2f}秒, 用户ID: {user_id}")
+        # 清理失败的记录
+        if user_id and timestamp:
+            delete_history_record(timestamp)
+            image_logger.info(f"已清理失败记录 - image_id: {timestamp}")
         return jsonify({
             "success": False,
             "error": "图片生成超时（超过 10 分钟）",
@@ -413,6 +541,11 @@ def generate_image():
         }), 500
     except requests.exceptions.ConnectionError:
         elapsed_time = time.time() - start_time
+        image_logger.error(f"无法连接到DrawThings服务器 - 耗时: {elapsed_time:.2f}秒, 用户ID: {user_id}")
+        # 清理失败的记录
+        if user_id and timestamp:
+            delete_history_record(timestamp)
+            image_logger.info(f"已清理失败记录 - image_id: {timestamp}")
         return jsonify({
             "success": False,
             "error": "无法连接到 DrawThings 服务器",
@@ -420,6 +553,11 @@ def generate_image():
         }), 500
     except Exception as e:
         elapsed_time = time.time() - start_time
+        image_logger.error(f"图片生成失败 - 错误: {str(e)}, 耗时: {elapsed_time:.2f}秒, 用户ID: {user_id}")
+        # 清理失败的记录
+        if user_id and timestamp:
+            delete_history_record(timestamp)
+            image_logger.info(f"已清理失败记录 - image_id: {timestamp}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -604,9 +742,24 @@ def update_refine_config():
 # 注册历史记录相关路由
 register_history_routes(app)
 
+# 启动时清理不完整的历史记录
+print("检查并清理不完整的历史记录...")
+try:
+    result = cleanup_incomplete_records(IMAGES_DIR)
+    if result['cleaned_count'] > 0:
+        print(f"✅ 已清理 {result['cleaned_count']} 条不完整记录")
+    else:
+        print("✅ 没有发现不完整的记录")
+except Exception as e:
+    print(f"⚠️  清理不完整记录时出错: {e}")
+
 
 if __name__ == '__main__':
     print("启动 DrawThings WebUI 服务器...")
     print(f"静态文件目录: {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')}")
     print(f"生成图片保存目录: {IMAGES_DIR}")
+    
+    # 启动定期清理任务
+    start_cleanup_scheduler(interval_hours=24)
+    
     app.run(host='0.0.0.0', port=5000, debug=True)
