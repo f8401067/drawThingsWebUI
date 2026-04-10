@@ -58,3 +58,4 @@ htmlcov/
 logs/image_generation.log
 logs/llm_calls.log
 scripts/history.db
+timing_stats.json
