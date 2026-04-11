@@ -318,6 +318,16 @@ def index():
     return send_from_directory(app.static_folder, 'index.html')
 
 
+@app.route('/favicon.ico')
+def favicon():
+    """提供网站图标
+    
+    Returns:
+        Response: favicon 文件
+    """
+    return send_from_directory(app.static_folder, 'favicon.svg', mimetype='image/svg+xml')
+
+
 @app.route('/api/status', methods=['GET'])
 def check_status():
     """检查 DrawThings 服务器状态
@@ -329,7 +339,7 @@ def check_status():
     """
     drawthings_url = load_config()
     try:
-        response = requests.get(drawthings_url, timeout=10)
+        response = requests.get(drawthings_url, timeout=2)
         if response.status_code == 200:
             data = response.json()
             return jsonify({

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>生成历史 - DrawThings WebUI</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -166,6 +166,47 @@
             height: auto;
             display: block;
             cursor: pointer;
+        }
+
+        /* Loading animation for incomplete images */
+        .history-item-loading {
+            width: 100%;
+            aspect-ratio: 1;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #667eea;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
+            border-radius: 4px;
         }
 
         .history-item-info {
@@ -1551,8 +1592,17 @@
                 if (data.success && data.history && data.history.length > 0) {
                     renderHistory(data.history);
                     document.getElementById('historyGrid').style.display = 'block';
+                    
+                    // Check if there are any generating items and set up auto-refresh
+                    const hasGeneratingItems = data.history.some(item => !item.elapsed_time || item.elapsed_time === 0);
+                    if (hasGeneratingItems) {
+                        setupAutoRefresh();
+                    } else {
+                        clearAutoRefresh();
+                    }
                 } else {
                     document.getElementById('emptyState').style.display = 'block';
+                    clearAutoRefresh();
                 }
             } catch (error) {
                 console.error('Failed to load history:', error);
@@ -1560,6 +1610,27 @@
                 document.getElementById('historyGrid').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'block';
                 showToast('加载历史记录失败: ' + error.message);
+                clearAutoRefresh();
+            }
+        }
+
+        // Auto-refresh timer for generating items
+        let autoRefreshTimer = null;
+        
+        function setupAutoRefresh() {
+            // Clear existing timer if any
+            clearAutoRefresh();
+            
+            // Set up new timer to refresh every 3 seconds
+            autoRefreshTimer = setInterval(() => {
+                loadHistory();
+            }, 3000);
+        }
+        
+        function clearAutoRefresh() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
             }
         }
 
@@ -1574,9 +1645,26 @@
                 const nsfwBtnClass = isNsfw ? 'nsfw-icon-btn nsfw-active' : 'nsfw-icon-btn';
                 const escapedPrompt = escapeHtml(item.prompt || '无提示词');
                 
+                // Check if the image is still generating (elapsed_time is 0 or very small)
+                const isGenerating = !item.elapsed_time || item.elapsed_time === 0;
+                
+                let imageContent;
+                if (isGenerating) {
+                    // Show loading animation for incomplete images
+                    imageContent = `
+                        <div class="history-item-loading">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">生成中...</div>
+                        </div>
+                    `;
+                } else {
+                    // Show actual image for completed generations
+                    imageContent = `<img src="${item.image_url}" alt="Generated Image" loading="lazy" onclick="openImage('${item.image_url}')">`;
+                }
+                
                 return `
                     <div class="history-item">
-                        <img src="${item.image_url}" alt="Generated Image" loading="lazy" onclick="openImage('${item.image_url}')">
+                        ${imageContent}
                         <button class="${nsfwBtnClass}" onclick="event.stopPropagation(); toggleNsfw('${imageId}')" title="${isNsfw ? '取消NSFW标记' : '标记为NSFW'}">${nsfwIcon}</button>
                         <div class="history-item-info">
                             <div class="history-item-prompt" 
@@ -1833,6 +1921,11 @@
                 if (datePicker && dropdown && !datePicker.contains(event.target)) {
                     dropdown.classList.remove('show');
                 }
+            });
+            
+            // Clean up auto-refresh timer when page unloads
+            window.addEventListener('beforeunload', function() {
+                clearAutoRefresh();
             });
         });
 

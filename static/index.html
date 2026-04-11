@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DrawThings WebUI</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -1130,7 +1130,15 @@
             const formPanel = document.getElementById('formPanel');
 
             try {
-                const response = await fetch(`${API_BASE}/api/status`);
+                // 创建 AbortController 用于超时控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000); // 2秒超时
+                
+                const response = await fetch(`${API_BASE}/api/status`, {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
                 const data = await response.json();
 
                 if (data.success) {
@@ -1174,16 +1182,26 @@
                 }
             } catch (error) {
                 statusPanel.className = 'status-panel error';
+                
+                // 检查是否是超时错误
+                const isTimeout = error.name === 'AbortError' || error.message.includes('timeout');
+                const errorMessage = isTimeout ? '连接服务器超时（2秒）' : escapeHtml(error.message);
+                
                 statusPanel.innerHTML = `
                     <h3>✗ 服务器连接失败</h3>
                     <div class="warning-message">
-                        <strong>错误信息:</strong> ${escapeHtml(error.message)}
+                        <strong>错误信息:</strong> ${errorMessage}
                         <br><br>
                         请检查 DrawThings 服务是否正在运行，或点击下方按钮配置服务地址。
                         <br><br>
                         <button class="btn-config btn-config-primary" onclick="showConfigModal()" style="margin-top: 10px;">配置服务地址</button>
                     </div>
                 `;
+                
+                // 如果是超时，自动弹出配置窗口
+                if (isTimeout) {
+                    setTimeout(() => showConfigModal(), 500);
+                }
             }
         }
 
