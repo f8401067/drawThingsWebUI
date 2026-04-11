@@ -14,25 +14,47 @@ from flask_cors import CORS
 import requests
 
 # 导入数据库模块
-from database import (
-    add_history_record,
-    update_history_record,
-    delete_history_record,
-    cleanup_incomplete_records,
-    migrate_from_json,
-    get_history_count,
-    get_or_create_user,
-    get_user_history
-)
+try:
+    from src.database import (
+        add_history_record,
+        update_history_record,
+        delete_history_record,
+        cleanup_incomplete_records,
+        migrate_from_json,
+        get_history_count,
+        get_or_create_user,
+        get_user_history
+    )
+except ModuleNotFoundError:
+    from database import (
+        add_history_record,
+        update_history_record,
+        delete_history_record,
+        cleanup_incomplete_records,
+        migrate_from_json,
+        get_history_count,
+        get_or_create_user,
+        get_user_history
+    )
 
 # 导入历史记录路由模块
-from history_routes import register_history_routes
+try:
+    from src.history_routes import register_history_routes
+except ModuleNotFoundError:
+    from history_routes import register_history_routes
 
 # 导入 AI 润色模块
-from ai_refine import refine_prompt_with_llm, load_config as load_ai_config, save_config as save_ai_config
+try:
+    from src.ai_refine import refine_prompt_with_llm, load_config as load_ai_config, save_config as save_ai_config
+except ModuleNotFoundError:
+    from ai_refine import refine_prompt_with_llm, load_config as load_ai_config, save_config as save_ai_config
 
 # 创建 Flask 应用实例
-app = Flask(__name__, static_folder='static', static_url_path='')
+# 静态文件目录在项目根目录的 static 文件夹
+import os as _os
+_static_folder = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), 'static')
+app = Flask(__name__, static_folder=_static_folder, static_url_path='')
+del _os, _static_folder
 # 启用跨域支持
 CORS(app)
 
@@ -69,9 +91,11 @@ def start_cleanup_scheduler(interval_hours=24):
     print(f"已启动定期清理任务（每{interval_hours}小时执行一次）")
 
 # 存储生成图片的目录
-IMAGES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated_images')
+IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'generated_images')
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
 # 创建日志目录
-LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 # 配置图片生成日志
@@ -91,10 +115,10 @@ llm_logger.addHandler(llm_handler)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
 # 存储耗时统计数据的文件
-TIMING_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'timing_stats.json')
+TIMING_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'timing_stats.json')
 
 # 存储 DrawThings 配置的文件
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.json')
 
 # DrawThings 服务默认地址
 DEFAULT_DRAWTHINGS_URL = "http://127.0.0.1:7888"
@@ -290,7 +314,8 @@ def index():
     Returns:
         Response: 静态 HTML 页面
     """
-    return send_from_directory('static', 'index.html')
+    # 使用 app.static_folder 获取正确的静态文件目录
+    return send_from_directory(app.static_folder, 'index.html')
 
 
 @app.route('/api/status', methods=['GET'])
@@ -440,7 +465,10 @@ def generate_image():
         
         # 异步进行NSFW检测（如果配置了LLM）- 在转发请求前执行
         try:
-            from llm_client import async_detect_nsfw
+            try:
+                from src.llm_client import async_detect_nsfw
+            except ModuleNotFoundError:
+                from llm_client import async_detect_nsfw
             prompt = params.get("prompt", "")
             negative_prompt = params.get("negative_prompt", "")
             async_detect_nsfw(prompt, negative_prompt, timestamp)
@@ -756,7 +784,7 @@ except Exception as e:
 
 if __name__ == '__main__':
     print("启动 DrawThings WebUI 服务器...")
-    print(f"静态文件目录: {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')}")
+    print(f"静态文件目录: {app.static_folder}")
     print(f"生成图片保存目录: {IMAGES_DIR}")
     
     # 启动定期清理任务

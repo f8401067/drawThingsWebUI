@@ -58,7 +58,7 @@ def clean_old_images(days=30):
     from datetime import datetime, timedelta
     
     cutoff_date = datetime.now() - timedelta(days=days)
-    images_dir = 'generated_images'
+    images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'generated_images')
     
     if not os.path.exists(images_dir):
         print("  生成图片目录不存在")
@@ -93,7 +93,7 @@ def show_directory_size():
     print("="*60)
     
     directories = [
-        'generated_images',
+        'data/generated_images',
         'tests',
         'docs',
         'scripts',

@@ -26,7 +26,7 @@ python tests/test_auto_nsfw.py
 
 #### 步骤1: 启动应用
 ```bash
-python app.py
+python src/app.py
 ```
 
 #### 步骤2: 访问主页

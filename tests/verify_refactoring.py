@@ -15,21 +15,21 @@ def verify_imports():
     print("=" * 60)
     
     try:
-        from app import app
+        from src.app import app
         print("✅ app.py 导入成功")
     except Exception as e:
         print(f"❌ app.py 导入失败: {e}")
         return False
     
     try:
-        from history_routes import register_history_routes, get_user_uid
+        from src.history_routes import register_history_routes, get_user_uid
         print("✅ history_routes.py 导入成功")
     except Exception as e:
         print(f"❌ history_routes.py 导入失败: {e}")
         return False
     
     try:
-        from database import (
+        from src.database import (
             init_database,
             add_history_record,
             get_user_history,
@@ -51,7 +51,7 @@ def verify_routes():
     print("验证路由注册...")
     print("=" * 60)
     
-    from app import app
+    from src.app import app
     
     expected_routes = [
         ('/', 'GET'),
@@ -91,7 +91,7 @@ def verify_database():
     print("=" * 60)
     
     try:
-        from database import get_history_count
+        from src.database import get_history_count
         
         # 测试基本查询
         count = get_history_count()

@@ -6,8 +6,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import app
-from database import add_history_record, get_user_history
+from src.app import app
+from src.database import add_history_record, get_user_history
 import json
 
 

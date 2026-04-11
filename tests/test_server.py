@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     # Try importing the app
-    from app import app
+    from src.app import app
     print("✓ Flask app imported successfully")
     print(f"✓ Static folder: {app.static_folder}")
     print(f"✓ Routes registered:")
@@ -18,7 +18,7 @@ try:
         print(f"  - {rule.rule} ({', '.join(rule.methods - {'OPTIONS', 'HEAD'})})")
     print("\n✓ All imports successful!")
     print("\nTo run the server:")
-    print("  python app.py")
+    print("  python src/app.py")
 except ImportError as e:
     print(f"✗ Import error: {e}")
     print("\nPlease install dependencies first:")

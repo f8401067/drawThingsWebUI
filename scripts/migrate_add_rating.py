@@ -5,7 +5,7 @@
 import sqlite3
 import os
 
-DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'history.db')
+DB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'history.db')
 
 def add_rating_column():
     """为 generation_history 表添加 rating 字段"""

@@ -27,7 +27,7 @@ def test_logging_setup():
     # 导入app模块以触发日志配置
     print("\n2. 导入app模块...")
     try:
-        import app
+        import src.app as app
         print(f"   ✓ app模块导入成功")
     except Exception as e:
         print(f"   ✗ app模块导入失败: {e}")

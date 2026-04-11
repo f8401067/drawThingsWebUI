@@ -8,7 +8,7 @@
 start.bat
 
 # 或手动启动
-python app.py
+python src/app.py
 ```
 
 ### 运行测试

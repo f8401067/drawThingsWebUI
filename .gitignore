@@ -1,12 +1,8 @@
-# 生成的图片
-/generated_images/*
-
-# 数据库文件
-/history.db
-
-# JSON 数据文件
-/generation_history.json
-/timing_stats.json
+# 数据文件（运行时生成）
+/data/generated_images/*
+/data/history.db
+/data/timing_stats.json
+/data/logs/*.log
 
 # 配置文件
 /config.json
@@ -55,7 +51,6 @@ htmlcov/
 
 # 文档生成
 /docs/_build/
-logs/image_generation.log
-logs/llm_calls.log
 scripts/history.db
-timing_stats.json
+src/logs/image_generation.log
+src/logs/llm_calls.log

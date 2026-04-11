@@ -3,17 +3,30 @@
 """
 
 from flask import request, jsonify
-from database import (
-    get_user_history,
-    get_all_history,
-    get_available_dates,
-    clear_user_history,
-    get_history_count,
-    update_rating,
-    delete_bad_images,
-    get_or_create_user,
-    toggle_nsfw
-)
+try:
+    from src.database import (
+        get_user_history,
+        get_all_history,
+        get_available_dates,
+        clear_user_history,
+        get_history_count,
+        update_rating,
+        delete_bad_images,
+        get_or_create_user,
+        toggle_nsfw
+    )
+except ModuleNotFoundError:
+    from database import (
+        get_user_history,
+        get_all_history,
+        get_available_dates,
+        clear_user_history,
+        get_history_count,
+        update_rating,
+        delete_bad_images,
+        get_or_create_user,
+        toggle_nsfw
+    )
 import os
 
 
@@ -56,7 +69,10 @@ def register_history_routes(app):
             Response: JSON 响应，包含新创建的用户 ID
         """
         try:
-            from database import get_or_create_user
+            try:
+                from src.database import get_or_create_user
+            except ModuleNotFoundError:
+                from database import get_or_create_user
             user_id = get_or_create_user(is_new=True)
             
             return jsonify({
@@ -344,7 +360,7 @@ def register_history_routes(app):
             deleted_count, filenames = delete_bad_images(all_users=all_users, user_id=user_id if not all_users else None)
             
             # 删除原文件
-            IMAGES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated_images')
+            IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'generated_images')
             deleted_files = 0
             failed_files = 0
             for filename in filenames:

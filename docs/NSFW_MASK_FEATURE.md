@@ -17,7 +17,7 @@
 
 ### 2. 测试正常图片（非NSFW）
 
-1. 启动应用：`python app.py`
+1. 启动应用：`python src/app.py`
 2. 访问主页：`http://localhost:5000`
 3. 输入一个安全的提示词，例如："beautiful landscape with mountains"
 4. 点击"生成图片"

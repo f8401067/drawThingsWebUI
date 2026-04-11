@@ -183,10 +183,33 @@
             padding: 3px 5px;
             border-radius: 3px;
             transition: background-color 0.2s;
+            position: relative;
         }
 
         .history-item-prompt:hover {
             background-color: #f0f0f0;
+        }
+
+        /* Tooltip for full prompt */
+        .prompt-tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+            max-width: 400px;
+            word-wrap: break-word;
+            z-index: 10001;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .prompt-tooltip.show {
+            opacity: 1;
         }
 
         .history-item-meta {
@@ -996,6 +1019,9 @@
         <div id="historyGrid" class="history-grid" style="display: none;"></div>
     </div>
 
+    <!-- Prompt Tooltip -->
+    <div id="promptTooltip" class="prompt-tooltip"></div>
+
     <!-- Back to Top Button -->
     <button class="back-to-top" id="backToTopBtn" onclick="scrollToTop()" title="返回顶部">↑</button>
 
@@ -1546,13 +1572,17 @@
                 const starsHtml = generateStarsHtml(rating, imageId);
                 const nsfwIcon = isNsfw ? '🔞' : '✅';
                 const nsfwBtnClass = isNsfw ? 'nsfw-icon-btn nsfw-active' : 'nsfw-icon-btn';
+                const escapedPrompt = escapeHtml(item.prompt || '无提示词');
                 
                 return `
                     <div class="history-item">
                         <img src="${item.image_url}" alt="Generated Image" loading="lazy" onclick="openImage('${item.image_url}')">
                         <button class="${nsfwBtnClass}" onclick="event.stopPropagation(); toggleNsfw('${imageId}')" title="${isNsfw ? '取消NSFW标记' : '标记为NSFW'}">${nsfwIcon}</button>
                         <div class="history-item-info">
-                            <div class="history-item-prompt" onclick="event.stopPropagation(); copyToClipboard('${escapeHtml(item.prompt || '无提示词')}', '提示词')">${escapeHtml(item.prompt || '无提示词')}</div>
+                            <div class="history-item-prompt" 
+                                 onmouseenter="showPromptTooltip(this, '${escapedPrompt.replace(/'/g, "\\'")}')" 
+                                 onmouseleave="hidePromptTooltip()"
+                                 onclick="event.stopPropagation(); copyToClipboard('${escapeHtml(item.prompt || '无提示词')}', '提示词')">${escapedPrompt}</div>
                             <div class="history-item-meta">
                                 <span>${item.width}x${item.height}</span>
                                 <span>Seed: <span class="seed-value" onclick="event.stopPropagation(); copyToClipboard('${item.seed}', 'Seed')">${item.seed}</span></span>
@@ -1632,6 +1662,50 @@
                 document.body.removeChild(textarea);
                 showToast(`${label}已复制到剪贴板`);
             }
+        }
+
+        // Show/Hide prompt tooltip
+        let currentPromptElement = null;
+        
+        function showPromptTooltip(element, prompt) {
+            const tooltip = document.getElementById('promptTooltip');
+            if (!tooltip || !prompt) return;
+            
+            currentPromptElement = element;
+            tooltip.textContent = prompt;
+            tooltip.classList.add('show');
+            
+            // Calculate position
+            const rect = element.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+            
+            // Position above the element with some offset
+            let top = rect.top - tooltipRect.height - 8;
+            let left = rect.left;
+            
+            // Ensure tooltip stays within viewport
+            if (top < 10) {
+                top = rect.bottom + 8;
+            }
+            
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipRect.width - 10;
+            }
+            
+            if (left < 10) {
+                left = 10;
+            }
+            
+            tooltip.style.top = top + 'px';
+            tooltip.style.left = left + 'px';
+        }
+        
+        function hidePromptTooltip() {
+            const tooltip = document.getElementById('promptTooltip');
+            if (tooltip) {
+                tooltip.classList.remove('show');
+            }
+            currentPromptElement = null;
         }
 
         // Show toast notification

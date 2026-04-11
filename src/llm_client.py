@@ -2,11 +2,15 @@
 LLM客户端模块 - 用于调用大模型API进行NSFW检测
 """
 
+import os
 import requests
 import json
 import threading
 import logging
-from database import update_nsfw_status
+try:
+    from src.database import update_nsfw_status
+except ModuleNotFoundError:
+    from database import update_nsfw_status
 
 # 配置LLM调用日志
 llm_logger = logging.getLogger('llm_calls')
@@ -20,7 +24,8 @@ def load_llm_config():
         dict: LLM配置信息
     """
     try:
-        with open('config.json', 'r', encoding='utf-8') as f:
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.json')
+        with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
             return {
                 'api_url': config.get('llm_api_url'),
@@ -96,7 +101,8 @@ def detect_nsfw_content(prompt, negative_prompt="", image_id=None):
             ],
             "temperature": 0.3,  # 适度温度以平衡一致性和灵活性
             "max_tokens": 10,
-            "top_p": 0.9  # 使用核采样增加多样性
+            "top_p": 0.9,  # 使用核采样增加多样性
+            "enable_thinking": False  # 关闭思考模式，加快响应速度
         }
         
         response = requests.post(

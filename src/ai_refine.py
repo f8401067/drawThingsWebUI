@@ -14,7 +14,7 @@ DEFAULT_MODEL = "gpt-3.5-turbo"
 API_KEY_ENV_VAR = "LLM_API_KEY"
 
 # 使用项目根目录已有的 config.json 文件
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.json')
 
 # 配置LLM调用日志
 llm_logger = logging.getLogger('llm_calls')
@@ -114,7 +114,8 @@ def refine_prompt_with_llm(prompt, language="zh"):
             {"role": "user", "content": f"Refine this prompt: {prompt}"}
         ],
         "temperature": 0.7,
-        "max_tokens": 500
+        "max_tokens": 500,
+        "enable_thinking": False  # 关闭思考模式，加快响应速度
     }
 
     try:

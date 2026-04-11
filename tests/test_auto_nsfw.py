@@ -8,8 +8,8 @@ import os
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-from llm_client import detect_nsfw_content, async_detect_nsfw
-from database import update_nsfw_status, get_user_history
+from src.llm_client import detect_nsfw_content, async_detect_nsfw
+from src.database import update_nsfw_status, get_user_history
 import time
 
 
@@ -89,7 +89,7 @@ def test_llm_config():
     print("测试4: LLM配置加载")
     print("=" * 60)
     
-    from llm_client import load_llm_config
+    from src.llm_client import load_llm_config
     
     config = load_llm_config()
     if config:

@@ -8,7 +8,10 @@ from datetime import datetime
 from contextlib import contextmanager
 
 # 数据库文件路径
-DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'history.db')
+try:
+    DB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'history.db')
+except:
+    DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'history.db')
 
 
 @contextmanager
@@ -558,7 +561,7 @@ def cleanup_incomplete_records(images_dir=None):
     import os
     
     if images_dir is None:
-        images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated_images')
+        images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'generated_images')
     
     with get_db_connection() as conn:
         cursor = conn.cursor()

@@ -142,7 +142,7 @@ if current_count >= 5:  # 修改这个数字
 1. 确保所有文件已保存
 2. 重启 Flask 服务器：
    ```bash
-   python app.py
+   python src/app.py
    ```
 3. 测试功能：
    - 方法1：手动快速点击生成按钮6次

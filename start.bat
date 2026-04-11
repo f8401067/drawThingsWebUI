@@ -51,6 +51,6 @@ echo [INFO] Starting DrawThings WebUI server...
 echo [INFO] Server will be available at: http://localhost:5000
 echo [INFO] Press Ctrl+C to stop the server
 echo.
-python app.py
+python src/app.py
 
 pause
