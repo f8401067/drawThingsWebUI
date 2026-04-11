@@ -1144,11 +1144,13 @@
                 if (data.success) {
                     // Get generating count
                     let generatingCount = 0;
+                    let estimatedWaitTime = 0;
                     try {
                         const genResponse = await fetch(`${API_BASE}/api/status/generating`);
                         const genData = await genResponse.json();
                         if (genData.success) {
                             generatingCount = genData.generating_count;
+                            estimatedWaitTime = genData.estimated_wait_time || 0;
                         }
                     } catch (e) {
                         console.error('Failed to get generating status:', e);
@@ -1157,6 +1159,13 @@
                     statusPanel.className = 'status-panel success';
                     let generatingHtml = '';
                     if (generatingCount > 0) {
+                        // 计算预计等待时间的显示文本
+                        let waitTimeText = '';
+                        if (estimatedWaitTime > 0) {
+                            const waitMinutes = (estimatedWaitTime / 60).toFixed(1);
+                            waitTimeText = `，预计需要等待 <strong>${waitMinutes}</strong> 分钟`;
+                        }
+                        
                         generatingHtml = `
                             <div class="generating-info" style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; text-align: center;">
                                 <span style="color: #856404;">🔄 当前有 <strong>${generatingCount}</strong> 个任务正在生成中... (最多允许5个并发任务)</span>
@@ -1225,12 +1234,20 @@
                 
                 if (data.success) {
                     const count = data.generating_count;
+                    const estimatedWaitTime = data.estimated_wait_time || 0;
                     const statusPanel = document.getElementById('statusPanel');
                     
                     // Find the generating info div
                     let genDiv = statusPanel.querySelector('.generating-info');
                     
                     if (count > 0) {
+                        // 计算预计等待时间的显示文本
+                        let waitTimeText = '';
+                        if (estimatedWaitTime > 0) {
+                            const waitMinutes = (estimatedWaitTime / 60).toFixed(1);
+                            waitTimeText = `，预计需要等待 <strong>${waitMinutes}</strong> 分钟`;
+                        }
+                        
                         // Show or update the generating info
                         if (!genDiv) {
                             // Create new div
@@ -1239,7 +1256,7 @@
                             genDiv.style.cssText = 'margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; text-align: center;';
                             statusPanel.appendChild(genDiv);
                         }
-                        genDiv.innerHTML = `<span style="color: #856404;">🔄 当前有 <strong>${count}</strong> 个任务正在生成中... (最多允许5个并发任务)</span>`;
+                        genDiv.innerHTML = `<span style="color: #856404;">🔄 当前有 <strong>${count}</strong> 个任务正在生成中... (最多允许5个并发任务)${waitTimeText}</span>`;
                     } else {
                         // Hide the generating info if exists
                         if (genDiv) {
@@ -1323,6 +1340,15 @@
                 if (estimateData.success) {
                     estimatedTime = estimateData.estimated_time;
                     console.log(`预估生成时间: ${estimatedTime}秒`);
+                    
+                    // 将秒转换为分钟（保留一位小数）
+                    const estimatedMinutes = (estimatedTime / 60).toFixed(1);
+                    
+                    // 更新按钮文字
+                    const btnSpan = generateBtn.querySelector('span');
+                    if (btnSpan) {
+                        btnSpan.textContent = `开始生成, 预计需要${estimatedMinutes}分钟, 请稍等...`;
+                    }
                 }
             } catch (error) {
                 console.error('获取预估时间失败:', error);
@@ -1355,6 +1381,12 @@
                 generateBtn.disabled = false;
                 generateBtn.classList.remove('btn-loading');
                 generateBtn.style.removeProperty('--progress');
+                
+                // 恢复按钮原始文字
+                const btnSpan = generateBtn.querySelector('span');
+                if (btnSpan) {
+                    btnSpan.textContent = '生成图片';
+                }
             }
         }
 

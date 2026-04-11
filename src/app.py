@@ -6,6 +6,7 @@ DrawThings WebUI - Python Flask 后端服务
 import os
 import json
 import time
+import math
 import base64
 import logging
 from datetime import datetime
@@ -270,7 +271,7 @@ def load_config():
 def save_config(drawthings_url):
     """保存 DrawThings 服务配置
     
-    将 DrawThings 服务地址写入 config.json 文件。
+    将 DrawThings 服务地址写入 config.json 文件，同时保留其他配置项。
     
     Args:
         drawthings_url (str): DrawThings 服务地址
@@ -283,7 +284,18 @@ def save_config(drawthings_url):
         if not drawthings_url.startswith(('http://', 'https://')):
             drawthings_url = 'http://' + drawthings_url
         
-        config = {"drawthings_url": drawthings_url}
+        # 读取现有配置，保留其他配置项
+        config = {}
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
+        
+        # 更新 drawthings_url，保留其他配置
+        config["drawthings_url"] = drawthings_url
+        
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
         return True
@@ -672,13 +684,31 @@ def get_generating_status():
     """获取当前正在生成的请求数量
     
     Returns:
-        Response: JSON 响应，包含正在生成的数量
+        Response: JSON 响应，包含正在生成的数量和预计等待时间
     """
     with count_lock:
         count = generating_count
+    
+    # 计算预计等待时间（所有当前任务执行完的总时间）
+    estimated_wait_time = 0
+    if count > 0:
+        # 获取用户 ID
+        user_id = get_user_id()
+        
+        # 使用默认参数估算单个任务的平均时间（512x512, 8 steps）
+        estimation = estimate_generation_time(512, 512, 8, user_id)
+        avg_time_per_task = estimation["estimated_time"]
+        
+        # 所有当前任务执行完的总时间 = 当前任务数 * 平均每个任务的时间
+        # 因为有并发，所以实际时间是：ceil(count / max_concurrent) * avg_time_per_task
+        max_concurrent = 5
+        batches = math.ceil(count / max_concurrent)  # 需要几批才能执行完
+        estimated_wait_time = batches * avg_time_per_task
+    
     return jsonify({
         "success": True,
-        "generating_count": count
+        "generating_count": count,
+        "estimated_wait_time": round(estimated_wait_time, 2) if estimated_wait_time > 0 else 0
     })
 
 
