@@ -3,6 +3,8 @@
 一个基于 Python Flask 和静态 HTML 的 DrawThings Web 界面, 界面美观操作友好, 方便手机操作。  
 用来实现远程(如果是外网环境需自行组网)操作mac上的DrawThings进行生图操作, 以及查看图片的功能.  
 **注意: 需要自行安装DrawThings, 并且在DrawThings可以正常生图的情况下, 在高级中打开http server功能才能使用**
+![alt text](./docs/image/index.png)
+![alt text](./docs/image/image.png)
 
 ## 功能特性
 
