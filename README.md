@@ -3,8 +3,8 @@
 一个基于 Python Flask 和静态 HTML 的 DrawThings Web 界面, 界面美观操作友好, 方便手机操作。  
 用来实现远程(如果是外网环境需自行组网)操作mac上的DrawThings进行生图操作, 以及查看图片的功能.  
 **注意: 需要自行安装DrawThings, 并且在DrawThings可以正常生图的情况下, 在高级中打开http server功能才能使用**
-![alt text](./docs/image/index.png)
-![alt text](./docs/image/image.png)
+![主页图](./docs/image/index.png)
+![图片浏览](./docs/image/image.png)
 
 ## 功能特性
 
@@ -39,6 +39,30 @@
 ### Windows 用户（推荐）
 
 双击运行 `start.bat` 脚本，它会自动检查依赖并启动服务。
+
+### Linux/macOS 用户
+
+#### Linux 系统
+```bash
+# 赋予执行权限
+chmod +x start.sh
+
+# 运行启动脚本
+./start.sh
+```
+
+#### macOS 系统
+```bash
+# 赋予执行权限
+chmod +x start_macos.sh
+
+# 运行启动脚本（会自动打开浏览器）
+./start_macos.sh
+```
+
+**macOS 特性：**
+- 自动在3秒后打开浏览器访问 http://localhost:5000
+- 如需取消自动打开浏览器，可在启动时按 Ctrl+C
 
 ### 手动启动
 
@@ -132,6 +156,8 @@ drawThingsWebUI/
 ├── history_routes.py       # 历史记录路由模块
 ├── requirements.txt        # Python 依赖
 ├── start.bat              # Windows 启动脚本
+├── start.sh               # Linux 启动脚本
+├── start_macos.sh         # macOS 启动脚本
 ├── README.md              # 项目说明文档
 ├── .gitignore             # Git 忽略配置
 │
