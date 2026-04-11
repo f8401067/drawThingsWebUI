@@ -403,3 +403,7 @@ python scripts/migrate_add_nsfw.py
 - 更丰富的图片编辑功能
 - 团队协作功能增强
 - 性能优化和缓存机制
+
+## 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
