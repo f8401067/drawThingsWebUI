@@ -54,3 +54,4 @@ htmlcov/
 scripts/history.db
 src/logs/image_generation.log
 src/logs/llm_calls.log
+data/thumbnails/*

@@ -68,6 +68,16 @@ def init_database():
                 except Exception as e:
                     print(f"添加 is_nsfw 字段失败: {e}")
             
+            # 检查是否缺少缩略图字段
+            if 'thumbnail_url' not in columns:
+                print("检测到缺少 thumbnail_url 字段，正在添加...")
+                try:
+                    cursor.execute('ALTER TABLE generation_history ADD COLUMN thumbnail_url TEXT')
+                    cursor.execute('ALTER TABLE generation_history ADD COLUMN thumbnail_filename TEXT')
+                    print("缩略图字段添加成功")
+                except Exception as e:
+                    print(f"添加缩略图字段失败: {e}")
+            
             if needs_rebuild:
                 cursor.execute('DROP TABLE IF EXISTS generation_history')
                 cursor.execute('DROP TABLE IF EXISTS users')
@@ -82,6 +92,8 @@ def init_database():
                     image_id TEXT NOT NULL,
                     image_url TEXT NOT NULL,
                     image_filename TEXT NOT NULL,
+                    thumbnail_url TEXT,
+                    thumbnail_filename TEXT,
                     prompt TEXT,
                     negative_prompt TEXT,
                     width INTEGER DEFAULT 512,

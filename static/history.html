@@ -1038,6 +1038,13 @@
                             <span class="switch-label" id="nsfwStatusLabel">隐藏</span>
                         </div>
                     </div>
+
+                    <!-- Cache Management -->
+                    <div class="filter-row">
+                        <span class="filter-label">💾 缓存管理:</span>
+                        <button class="btn-date-filter" onclick="showCacheStats()" title="查看缓存统计">查看缓存</button>
+                        <button class="btn-date-clear" onclick="clearImageCache()" title="清除所有图片缓存">清除缓存</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1085,6 +1092,26 @@
         let isBadFilterActive = false; // Bad筛选是否激活
         let showNsfwContent = false; // 默认隐藏NSFW内容
         let availableDates = [];
+
+        // Register Service Worker for image caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('[SW] Registered successfully:', registration.scope);
+                        
+                        // 监听 SW 消息，可以显示缓存统计
+                        navigator.serviceWorker.addEventListener('message', (event) => {
+                            if (event.data && event.data.type === 'CACHE_STATS') {
+                                console.log('[SW] Cache stats:', event.data);
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.log('[SW] Registration failed:', error);
+                    });
+            });
+        }
 
         // Initialize user ID
         async function initUserId() {
@@ -1664,8 +1691,10 @@
                         </div>
                     `;
                 } else {
-                    // Show actual image for completed generations
-                    imageContent = `<img src="${item.image_url}" alt="Generated Image" loading="lazy" onclick="openImage('${item.image_url}')">`;
+                    // 优先使用缩略图，如果没有则使用原图
+                    const thumbnailUrl = item.thumbnail_url || item.image_url;
+                    const fullImageUrl = item.image_url;
+                    imageContent = `<img src="${thumbnailUrl}" alt="Generated Image" loading="lazy" onclick="openImage('${fullImageUrl}')">`;
                 }
                 
                 return `
@@ -1854,41 +1883,15 @@
             // 先初始化用户ID，等待完成
             await initUserId();
             
-            // 设置默认日期为今天（使用本地时间）
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const today = `${year}-${month}-${day}`;
+            // 默认不设置日期筛选，显示所有日期的图片（利用缓存提升加载速度）
+            currentDateFilter = '';
+            document.getElementById('dateFilterDisplay').value = '';
             
             try {
-                // 先加载可用日期
+                // 加载可用日期列表（供用户选择）
                 await loadAvailableDates();
-                
-                // 如果今天有记录，则默认选择今天
-                if (availableDates.includes(today)) {
-                    currentDateFilter = today;
-                    const dateObj = new Date(year, month - 1, day);
-                    const formattedDate = dateObj.toLocaleDateString('zh-CN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit'
-                    });
-                    document.getElementById('dateFilterDisplay').value = formattedDate;
-                } else if (availableDates.length > 0) {
-                    // 如果今天没有记录，但有其他日期的记录
-                    // 清除之前的日期筛选，显示所有可用记录
-                    currentDateFilter = '';
-                    document.getElementById('dateFilterDisplay').value = '';
-                } else {
-                    // 没有任何记录，清除筛选
-                    currentDateFilter = '';
-                    document.getElementById('dateFilterDisplay').value = '';
-                }
             } catch (error) {
                 console.error('Error during initialization:', error);
-                // 出错时也清除日期筛选
-                currentDateFilter = '';
             }
             
             // 初始化星级筛选的UI状态（默认不选择）
@@ -2041,6 +2044,62 @@
                 });
             });
         };
+
+        // Cache Management Functions
+        function showCacheStats() {
+            if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+                alert('Service Worker 未激活，请刷新页面后重试');
+                return;
+            }
+
+            const messageChannel = new MessageChannel();
+            messageChannel.port1.onmessage = (event) => {
+                if (event.data && event.data.type === 'CACHE_STATS') {
+                    const stats = event.data;
+                    const urlsList = stats.urls.slice(0, 10).join('\n');
+                    const moreText = stats.urls.length > 10 ? `\n...还有 ${stats.urls.length - 10} 张` : '';
+                    
+                    alert(`📊 缓存统计\n\n已缓存: ${stats.count} / ${stats.maxSize} 张图片\n\n最近缓存的图片:\n${urlsList}${moreText}`);
+                }
+            };
+
+            navigator.serviceWorker.controller.postMessage(
+                { type: 'GET_CACHE_STATS' },
+                [messageChannel.port2]
+            );
+        }
+
+        async function clearImageCache() {
+            const confirmed = await confirm('确定要清除所有图片缓存吗？\n\n清除后，再次访问图片时需要重新从服务器加载。');
+            if (!confirmed) {
+                return;
+            }
+
+            if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+                alert('Service Worker 未激活，请刷新页面后重试');
+                return;
+            }
+
+            const messageChannel = new MessageChannel();
+            messageChannel.port1.onmessage = (event) => {
+                if (event.data && event.data.type === 'CACHE_CLEARED') {
+                    if (event.data.success) {
+                        alert('✅ 缓存已清除');
+                        // 强制刷新页面以重新加载图片
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
+                        alert('❌ 清除缓存失败');
+                    }
+                }
+            };
+
+            navigator.serviceWorker.controller.postMessage(
+                { type: 'CLEAR_CACHE' },
+                [messageChannel.port2]
+            );
+        }
     </script>
 </body>
 </html>

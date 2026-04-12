@@ -1048,6 +1048,26 @@
         // User ID for history tracking
         let userId = null;
 
+        // Register Service Worker for image caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('[SW] Registered successfully:', registration.scope);
+                        
+                        // 监听 SW 消息，可以显示缓存统计
+                        navigator.serviceWorker.addEventListener('message', (event) => {
+                            if (event.data && event.data.type === 'CACHE_STATS') {
+                                console.log('[SW] Cache stats:', event.data);
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.log('[SW] Registration failed:', error);
+                    });
+            });
+        }
+
         // Initialize user ID
         function initUserId() {
             // Try to load from localStorage

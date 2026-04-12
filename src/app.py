@@ -13,6 +13,8 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
+from PIL import Image
+import io
 
 # 导入数据库模块
 try:
@@ -94,6 +96,10 @@ def start_cleanup_scheduler(interval_hours=24):
 # 存储生成图片的目录
 IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'generated_images')
 os.makedirs(IMAGES_DIR, exist_ok=True)
+
+# 存储缩略图的目录
+THUMBNAILS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'thumbnails')
+os.makedirs(THUMBNAILS_DIR, exist_ok=True)
 
 # 创建日志目录
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'logs')
@@ -304,6 +310,83 @@ def save_config(drawthings_url):
         return False
 
 
+def load_thumbnail_config():
+    """加载缩略图配置
+    
+    从 config.json 文件中读取缩略图生成配置。
+    
+    Returns:
+        dict: 包含 max_size, quality, format 的配置字典，如果不存在则返回默认值
+    """
+    default_config = {
+        "max_size": [300, 300],
+        "quality": 85,
+        "format": "JPEG"
+    }
+    
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                return config.get("thumbnail", default_config)
+        except (json.JSONDecodeError, IOError):
+            return default_config
+    return default_config
+
+
+def generate_thumbnail(image_path, thumbnail_path, size=None):
+    """生成图片缩略图
+    
+    Args:
+        image_path (str): 原图路径
+        thumbnail_path (str): 缩略图保存路径
+        size (tuple, optional): 缩略图最大尺寸 (width, height)，如果为 None 则从配置读取
+    
+    Returns:
+        bool: 生成成功返回 True，失败返回 False
+    """
+    try:
+        # 加载缩略图配置
+        thumb_config = load_thumbnail_config()
+        
+        # 如果没有指定尺寸，使用配置中的尺寸
+        if size is None:
+            size = tuple(thumb_config.get("max_size", [300, 300]))
+        
+        # 获取其他配置参数
+        quality = thumb_config.get("quality", 85)
+        img_format = thumb_config.get("format", "JPEG")
+        
+        # 打开图片
+        with Image.open(image_path) as img:
+            # 转换为 RGB 模式（处理 PNG 透明通道等）
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            # 生成缩略图（保持宽高比）
+            img.thumbnail(size, Image.LANCZOS)
+            
+            # 根据配置的格式保存缩略图
+            save_kwargs = {'optimize': True}
+            if img_format.upper() == 'JPEG':
+                save_kwargs['quality'] = quality
+                img.save(thumbnail_path, 'JPEG', **save_kwargs)
+            elif img_format.upper() == 'PNG':
+                img.save(thumbnail_path, 'PNG', **save_kwargs)
+            elif img_format.upper() == 'WEBP':
+                save_kwargs['quality'] = quality
+                img.save(thumbnail_path, 'WEBP', **save_kwargs)
+            else:
+                # 默认使用 JPEG
+                save_kwargs['quality'] = quality
+                img.save(thumbnail_path, 'JPEG', **save_kwargs)
+            
+        return True
+    except Exception as e:
+        print(f"生成缩略图失败: {e}")
+        return False
+
+
 # 存储生成历史的文件（已弃用，改用 SQLite）
 # HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generation_history.json')
 
@@ -338,6 +421,16 @@ def favicon():
         Response: favicon 文件
     """
     return send_from_directory(app.static_folder, 'favicon.svg', mimetype='image/svg+xml')
+
+
+@app.route('/sw.js')
+def service_worker():
+    """提供 Service Worker 文件
+    
+    Returns:
+        Response: Service Worker JavaScript 文件
+    """
+    return send_from_directory(app.static_folder, 'sw.js', mimetype='application/javascript')
 
 
 @app.route('/api/status', methods=['GET'])
@@ -472,6 +565,8 @@ def generate_image():
                 "id": timestamp,
                 "image_url": f"/generated_images/generated_{timestamp}.png",
                 "image_filename": f"generated_{timestamp}.png",
+                "thumbnail_url": f"/thumbnails/thumb_{timestamp}.jpg" if thumbnail_generated else None,
+                "thumbnail_filename": f"thumb_{timestamp}.jpg" if thumbnail_generated else None,
                 "prompt": params.get("prompt", ""),
                 "negative_prompt": params.get("negative_prompt", ""),
                 "width": width,
@@ -526,6 +621,16 @@ def generate_image():
         image_data = base64.b64decode(image_base64)
         with open(image_path, 'wb') as f:
             f.write(image_data)
+
+        # 生成缩略图
+        thumbnail_filename = f"thumb_{timestamp}.jpg"
+        thumbnail_path = os.path.join(THUMBNAILS_DIR, thumbnail_filename)
+        thumbnail_generated = generate_thumbnail(image_path, thumbnail_path)
+        
+        if thumbnail_generated:
+            image_logger.info(f"缩略图生成成功 - 文件名: {thumbnail_filename}")
+        else:
+            image_logger.warning(f"缩略图生成失败 - 时间戳: {timestamp}")
 
         # 获取 seed 值 - 通过请求 DrawThings 状态接口获取
         seed = -1
@@ -630,6 +735,19 @@ def serve_generated_image(filename):
         Response: 图片文件
     """
     return send_from_directory(IMAGES_DIR, filename)
+
+
+@app.route('/thumbnails/<filename>')
+def serve_thumbnail(filename):
+    """提供缩略图文件
+    
+    Args:
+        filename (str): 缩略图文件名
+    
+    Returns:
+        Response: 缩略图文件
+    """
+    return send_from_directory(THUMBNAILS_DIR, filename)
 
 
 @app.route('/api/config', methods=['GET'])
