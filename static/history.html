@@ -1541,6 +1541,9 @@
 
         // Load history
         async function loadHistory() {
+            // Save current scroll position before loading
+            const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            
             try {
                 // 先显示加载状态，隐藏其他内容
                 document.getElementById('loadingState').style.display = 'block';
@@ -1592,6 +1595,9 @@
                 if (data.success && data.history && data.history.length > 0) {
                     renderHistory(data.history);
                     document.getElementById('historyGrid').style.display = 'block';
+                    
+                    // Restore scroll position after rendering
+                    window.scrollTo(0, scrollPosition);
                     
                     // Check if there are any generating items and set up auto-refresh
                     const hasGeneratingItems = data.history.some(item => !item.elapsed_time || item.elapsed_time === 0);
