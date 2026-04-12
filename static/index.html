@@ -1518,13 +1518,6 @@
                     statusPanel.className = 'status-panel success';
                     let generatingHtml = '';
                     if (generatingCount > 0) {
-                        // 计算预计等待时间的显示文本
-                        let waitTimeText = '';
-                        if (estimatedWaitTime > 0) {
-                            const waitMinutes = (estimatedWaitTime / 60).toFixed(1);
-                            waitTimeText = `，预计需要等待 <strong>${waitMinutes}</strong> 分钟`;
-                        }
-                        
                         generatingHtml = `
                             <div class="generating-info" style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; text-align: center;">
                                 <span style="color: #856404;">🔄 当前有 <strong>${generatingCount}</strong> 个任务正在生成中... (最多允许5个并发任务)</span>
@@ -1593,20 +1586,12 @@
                 
                 if (data.success) {
                     const count = data.generating_count;
-                    const estimatedWaitTime = data.estimated_wait_time || 0;
                     const statusPanel = document.getElementById('statusPanel');
                     
                     // Find the generating info div
                     let genDiv = statusPanel.querySelector('.generating-info');
                     
                     if (count > 0) {
-                        // 计算预计等待时间的显示文本
-                        let waitTimeText = '';
-                        if (estimatedWaitTime > 0) {
-                            const waitMinutes = (estimatedWaitTime / 60).toFixed(1);
-                            waitTimeText = `，预计需要等待 <strong>${waitMinutes}</strong> 分钟`;
-                        }
-                        
                         // Show or update the generating info
                         if (!genDiv) {
                             // Create new div
@@ -1615,7 +1600,7 @@
                             genDiv.style.cssText = 'margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; text-align: center;';
                             statusPanel.appendChild(genDiv);
                         }
-                        genDiv.innerHTML = `<span style="color: #856404;">🔄 当前有 <strong>${count}</strong> 个任务正在生成中... (最多允许5个并发任务)${waitTimeText}</span>`;
+                        genDiv.innerHTML = `<span style="color: #856404;">🔄 当前有 <strong>${count}</strong> 个任务正在生成中... (最多允许5个并发任务)</span>`;
                     } else {
                         // Hide the generating info if exists
                         if (genDiv) {
