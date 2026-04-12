@@ -11,6 +11,7 @@ import math
 import base64
 import logging
 import argparse
+from pathlib import Path
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -95,16 +96,50 @@ def start_cleanup_scheduler(interval_hours=24):
     thread.start()
     print(f"已启动定期清理任务（每{interval_hours}小时执行一次）")
 
+
+# ===== 路径辅助函数（必须在其他变量之前定义）=====
+def get_app_root_dir():
+    """获取应用根目录
+    
+    从环境变量 APP_ROOT_DIR 读取，由启动脚本传入
+    """
+    app_root = os.environ.get('APP_ROOT_DIR')
+    if not app_root:
+        raise EnvironmentError(
+            "未设置 APP_ROOT_DIR 环境变量。\n"
+            "请通过启动脚本启动应用，或手动设置：export APP_ROOT_DIR=/path/to/app/dir"
+        )
+    return Path(app_root)
+
+
+def get_data_dir():
+    """获取数据目录路径"""
+    app_root = get_app_root_dir()
+    data_dir = app_root / 'data'
+    # 确保数据目录存在
+    data_dir.mkdir(parents=True, exist_ok=True)
+    return data_dir
+
+
+def get_config_file_path():
+    """获取配置文件路径"""
+    app_root = get_app_root_dir()
+    return app_root / 'config.json'
+
+
+# ===== 目录和文件路径初始化 =====
+
 # 存储生成图片的目录
-IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'generated_images')
+DATA_DIR = get_data_dir()
+IMAGES_DIR = str(DATA_DIR / 'generated_images')
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
 # 存储缩略图的目录
-THUMBNAILS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'thumbnails')
+THUMBNAILS_DIR = str(DATA_DIR / 'thumbnails')
 os.makedirs(THUMBNAILS_DIR, exist_ok=True)
 
 # 创建日志目录
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'logs')
+LOG_DIR = str(DATA_DIR / 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 
 # 配置图片生成日志
@@ -124,10 +159,10 @@ llm_logger.addHandler(llm_handler)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
 # 存储耗时统计数据的文件
-TIMING_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'timing_stats.json')
+TIMING_FILE = str(get_data_dir() / 'timing_stats.json')
 
 # 存储 DrawThings 配置的文件
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.json')
+CONFIG_FILE = str(get_config_file_path())
 
 # DrawThings 服务默认地址
 DEFAULT_DRAWTHINGS_URL = "http://127.0.0.1:7888"

@@ -4,17 +4,34 @@ AI 提示词润色模块
 """
 
 import os
+import sys
 import json
 import requests
 import logging
+from pathlib import Path
 
 # 默认的大模型 API 配置（可以根据实际情况修改）
 DEFAULT_API_URL = "https://api.openai.com/v1/chat/completions"
 DEFAULT_MODEL = "gpt-3.5-turbo"
 API_KEY_ENV_VAR = "LLM_API_KEY"
 
-# 使用项目根目录已有的 config.json 文件
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.json')
+
+def get_config_file_path():
+    """获取配置文件路径
+    
+    从环境变量 APP_ROOT_DIR 读取，由启动脚本传入
+    """
+    app_root = os.environ.get('APP_ROOT_DIR')
+    if not app_root:
+        raise EnvironmentError(
+            "未设置 APP_ROOT_DIR 环境变量。\n"
+            "请通过启动脚本启动应用，或手动设置：export APP_ROOT_DIR=/path/to/app/dir"
+        )
+    return Path(app_root) / "config.json"
+
+
+# 初始化配置文件路径
+CONFIG_FILE = str(get_config_file_path())
 
 # 配置LLM调用日志
 llm_logger = logging.getLogger('llm_calls')

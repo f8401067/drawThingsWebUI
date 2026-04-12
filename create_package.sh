@@ -53,21 +53,24 @@ cat > "$PACKAGE_DIR/README.md" << 'EOF'
 
 ## 快速开始
 
-1. **双击** `Launch_DrawThings_WebUI.command` 文件
-2. Terminal 窗口会自动打开，显示服务器日志
-3. 浏览器会自动打开 http://localhost:9898
-4. 开始使用！
+1. **解压** zip 文件到任意目录
+2. 确保 `Launch_DrawThings_WebUI.command` 和 `DrawThings WebUI.app` 在同一目录
+3. **双击** `Launch_DrawThings_WebUI.command` 文件
+4. Terminal 窗口会自动打开，显示服务器日志
+5. 浏览器会自动打开 http://localhost:9898
+6. 开始使用！
 
 ## 停止服务器
 
 在 Terminal 窗口中按 `Ctrl+C`
 
-## 配置文件
+## 配置文件和数据
 
-首次启动会自动创建配置文件，位置：
-`DrawThings WebUI.app/Contents/MacOS/config.json`
+首次启动会自动在同级目录创建：
+- `config.json` - 配置文件
+- `data/` - 数据目录（包含图片、日志等）
 
-你可以编辑此文件修改端口等设置。
+你可以直接编辑 `config.json` 修改端口等设置。
 
 ## 系统要求
 

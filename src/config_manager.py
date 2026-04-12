@@ -13,18 +13,15 @@ from pathlib import Path
 def get_config_file_path():
     """获取配置文件路径
     
-    兼容开发环境和 PyInstaller 打包环境
-    统一使用 config.json 作为唯一配置文件
+    从环境变量 APP_ROOT_DIR 读取，由启动脚本传入
     """
-    # 如果是 PyInstaller 打包的应用
-    if getattr(sys, 'frozen', False):
-        # 使用可执行文件所在目录
-        base_dir = Path(sys.executable).parent
-    else:
-        # 开发环境：项目根目录
-        base_dir = Path(__file__).parent.parent
-    
-    return base_dir / "config.json"
+    app_root = os.environ.get('APP_ROOT_DIR')
+    if not app_root:
+        raise EnvironmentError(
+            "未设置 APP_ROOT_DIR 环境变量。\n"
+            "请通过启动脚本启动应用，或手动设置：export APP_ROOT_DIR=/path/to/app/dir"
+        )
+    return Path(app_root) / "config.json"
 
 
 def load_app_config():

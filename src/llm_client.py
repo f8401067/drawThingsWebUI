@@ -3,10 +3,12 @@ LLM客户端模块 - 用于调用大模型API进行NSFW检测
 """
 
 import os
+import sys
 import requests
 import json
 import threading
 import logging
+from pathlib import Path
 try:
     from src.database import update_nsfw_status
 except ModuleNotFoundError:
@@ -17,6 +19,20 @@ llm_logger = logging.getLogger('llm_calls')
 llm_logger.setLevel(logging.INFO)
 
 
+def get_config_file_path():
+    """获取配置文件路径
+    
+    从环境变量 APP_ROOT_DIR 读取，由启动脚本传入
+    """
+    app_root = os.environ.get('APP_ROOT_DIR')
+    if not app_root:
+        raise EnvironmentError(
+            "未设置 APP_ROOT_DIR 环境变量。\n"
+            "请通过启动脚本启动应用，或手动设置：export APP_ROOT_DIR=/path/to/app/dir"
+        )
+    return Path(app_root) / 'config.json'
+
+
 def load_llm_config():
     """加载LLM配置
     
@@ -24,7 +40,7 @@ def load_llm_config():
         dict: LLM配置信息
     """
     try:
-        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.json')
+        config_path = get_config_file_path()
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
             return {

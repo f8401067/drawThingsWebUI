@@ -15,6 +15,7 @@ a = Analysis(
         ('src/ai_refine.py', 'src'),
         ('src/llm_client.py', 'src'),
         ('src/database.py', 'src'),
+        # 注意：不打包 config.json，让它在运行时动态创建
     ],
     hiddenimports=[
         'flask',
