@@ -43,19 +43,19 @@ def main():
     try:
         from src.config_manager import load_app_config
         config = load_app_config()
-        port = config.get('port', 5000)
+        port = config.get('port', 9898)
         host = config.get('host', '0.0.0.0')
         debug = config.get('debug', False)
         auto_open_browser = config.get('auto_open_browser', True)
     except ImportError:
         # 如果配置模块不存在，使用默认值
-        port = 5000
+        port = 9898
         host = '0.0.0.0'
         debug = False
         auto_open_browser = True
     except Exception as e:
         print(f"[警告] 加载配置失败: {e}，使用默认配置")
-        port = 5000
+        port = 9898
         host = '0.0.0.0'
         debug = False
         auto_open_browser = True
