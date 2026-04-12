@@ -4,11 +4,13 @@ DrawThings WebUI - Python Flask 后端服务
 """
 
 import os
+import sys
 import json
 import time
 import math
 import base64
 import logging
+import argparse
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -565,8 +567,8 @@ def generate_image():
                 "id": timestamp,
                 "image_url": f"/generated_images/generated_{timestamp}.png",
                 "image_filename": f"generated_{timestamp}.png",
-                "thumbnail_url": f"/thumbnails/thumb_{timestamp}.jpg" if thumbnail_generated else None,
-                "thumbnail_filename": f"thumb_{timestamp}.jpg" if thumbnail_generated else None,
+                "thumbnail_url": None,
+                "thumbnail_filename": None,
                 "prompt": params.get("prompt", ""),
                 "negative_prompt": params.get("negative_prompt", ""),
                 "width": width,
@@ -629,6 +631,17 @@ def generate_image():
         
         if thumbnail_generated:
             image_logger.info(f"缩略图生成成功 - 文件名: {thumbnail_filename}")
+            # 更新历史记录中的缩略图信息
+            if user_id:
+                updates = {
+                    'thumbnail_url': f"/thumbnails/{thumbnail_filename}",
+                    'thumbnail_filename': thumbnail_filename
+                }
+                success = update_history_record(timestamp, updates)
+                if success:
+                    image_logger.info(f"已更新历史记录缩略图信息 - image_id: {timestamp}")
+                else:
+                    image_logger.warning(f"更新历史记录缩略图信息失败 - image_id: {timestamp}")
         else:
             image_logger.warning(f"缩略图生成失败 - 时间戳: {timestamp}")
 
@@ -947,11 +960,19 @@ except Exception as e:
 
 
 if __name__ == '__main__':
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(description='DrawThings WebUI 服务器')
+    parser.add_argument('--port', type=int, default=9898, help='服务器端口 (默认: 9898)')
+    parser.add_argument('--host', type=str, default='0.0.0.0', help='服务器主机地址 (默认: 0.0.0.0)')
+    parser.add_argument('--debug', action='store_true', help='启用调试模式')
+    args = parser.parse_args()
+    
     print("启动 DrawThings WebUI 服务器...")
     print(f"静态文件目录: {app.static_folder}")
     print(f"生成图片保存目录: {IMAGES_DIR}")
+    print(f"服务器地址: http://{args.host}:{args.port}")
     
     # 启动定期清理任务
     start_cleanup_scheduler(interval_hours=24)
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host=args.host, port=args.port, debug=args.debug)

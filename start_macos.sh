@@ -24,15 +24,29 @@ if ! command -v pip3 &> /dev/null; then
     exit 1
 fi
 
+# Check if virtual environment exists
+if [ ! -d "venv" ]; then
+    echo "[INFO] Creating virtual environment..."
+    python3 -m venv venv
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to create virtual environment"
+        exit 1
+    fi
+fi
+
+# Activate virtual environment
+echo "[INFO] Activating virtual environment..."
+source venv/bin/activate
+
 # Check if dependencies are installed
 echo "[INFO] Checking dependencies..."
 python3 -c "import flask" 2>/dev/null
 if [ $? -ne 0 ]; then
     echo "[INFO] Installing dependencies..."
-    pip3 install -r requirements.txt
+    pip install -r requirements.txt
     if [ $? -ne 0 ]; then
         echo "[ERROR] Failed to install dependencies"
-        echo "Please try: python3 -m pip install -r requirements.txt"
+        echo "Please check your network connection and try again"
         exit 1
     fi
 else
@@ -53,7 +67,7 @@ echo ""
 
 # Start the Flask server
 echo "[INFO] Starting DrawThings WebUI server..."
-echo "[INFO] Server will be available at: http://localhost:5000"
+echo "[INFO] Server will be available at: http://localhost:5001"
 echo "[INFO] Press Ctrl+C to stop the server"
 echo ""
 

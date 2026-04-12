@@ -25,7 +25,7 @@
 ## 前置要求
 
 1. Python 3.8 或更高版本
-2. DrawThings 服务运行在 `127.0.0.1:8777`
+2. DrawThings 服务运行在 `127.0.0.1:8777`（可配置）
 
 ## 安装步骤
 
@@ -34,15 +34,37 @@
    pip install -r requirements.txt
    ```
 
-2. 确保 DrawThings 服务正在运行于 `127.0.0.1:8777`
+2. 确保 DrawThings 服务正在运行于 `127.0.0.1:8777`（可配置）
 
 ## 运行服务
 
-### Windows 用户（推荐）
+### 方式一：使用快速启动脚本（推荐）
 
+#### macOS / Linux
+```bash
+# 赋予执行权限
+chmod +x quick_start.sh
+
+# 使用默认端口 9898 启动
+./quick_start.sh
+
+# 自定义端口启动
+./quick_start.sh --port 8080
+```
+
+**特性：**
+- ✅ 自动检查 Python 环境和依赖
+- ✅ 自动创建和激活虚拟环境
+- ✅ 检查 DrawThings 服务状态
+- ✅ 自动在浏览器中打开应用
+- ✅ 支持通过 `--port` 参数自定义端口
+
+#### Windows
 双击运行 `start.bat` 脚本，它会自动检查依赖并启动服务。
 
-### Linux/macOS 用户
+---
+
+### 方式二：使用传统启动脚本
 
 #### Linux 系统
 ```bash
@@ -63,22 +85,87 @@ chmod +x start_macos.sh
 ```
 
 **macOS 特性：**
-- 自动在3秒后打开浏览器访问 http://localhost:5000
+- 自动在3秒后打开浏览器访问 http://localhost:5001
 - 如需取消自动打开浏览器，可在启动时按 Ctrl+C
 
-### 手动启动
+---
+
+### 方式三：直接运行 Python 应用
 
 ```bash
+# 使用默认端口 9898
 python src/app.py
+
+# 自定义端口
+python src/app.py --port 8080
+
+# 指定主机和端口
+python src/app.py --host 127.0.0.1 --port 9000
+
+# 启用调试模式
+python src/app.py --debug
 ```
 
-服务将在 `http://localhost:5000` 启动。
+### 端口配置说明
+
+**默认端口：9898**
+
+为了避免与 macOS 系统服务（如 AirPlay Receiver 占用 5000 端口）冲突，项目默认使用 **9898** 端口。
+
+#### 如何修改端口？
+
+**方法 1：命令行参数（临时生效）**
+```bash
+# 启动时指定端口
+./quick_start.sh --port 8080
+python src/app.py --port 8080
+```
+
+**方法 2：修改代码（永久生效）**
+
+编辑 `src/app.py` 文件，找到以下行：
+```python
+parser.add_argument('--port', type=int, default=9898, help='服务器端口 (默认: 9898)')
+```
+将 `default=9898` 改为你想要的端口号。
+
+同时编辑 `quick_start.sh` 文件，修改：
+```bash
+PORT=9898  # 改为你想要的端口号
+```
+
+#### 常用端口参考
+- **9898**：当前默认端口（推荐）
+- **8080**：常用的 Web 服务端口
+- **5000**：Flask 默认端口（可能与 macOS AirPlay 冲突）
+- **5001**：备用端口
+- **3000**：Node.js 常用端口
+
+#### 检查端口占用
+
+如果启动时提示端口被占用，可以使用以下命令检查：
+
+```bash
+# macOS / Linux
+lsof -i :9898
+
+# 终止占用端口的进程
+lsof -ti:9898 | xargs kill -9
+```
+
+---
+
+### 访问应用
+
+服务启动后，在浏览器中访问：
+- **主页**：`http://localhost:9898` （或你指定的端口）
+- **历史记录**：`http://localhost:9898/history.html`
 
 ## 使用说明
 
 ### 基本使用
 
-1. 打开浏览器访问 `http://localhost:5000`
+1. 打开浏览器访问 `http://localhost:9898`（或你配置的端口）
 2. 页面会自动检查 DrawThings 服务器状态
 3. 如果连接成功，填写生成参数：
    - **提示词**：描述你想要生成的图片内容
@@ -111,7 +198,7 @@ python src/app.py
 
 ### 历史记录管理
 
-访问 `http://localhost:5000/history.html` 进入历史记录页面：
+访问 `http://localhost:9898/history.html` 进入历史记录页面：
 
 #### 浏览器缓存功能
 - **自动缓存**：首次访问图片后自动缓存到浏览器，第二次访问秒开
