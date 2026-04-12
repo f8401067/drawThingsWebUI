@@ -1,6 +1,6 @@
 // DrawThings WebUI - Service Worker for Image Caching
-const CACHE_NAME = 'drawthings-images-v1';
-const IMAGE_CACHE_MAX_SIZE = 50; // 最多缓存50张图片
+const CACHE_NAME = 'drawthings-images-v2'; // 更新版本号以强制刷新旧缓存
+const IMAGE_CACHE_MAX_SIZE = 100; // 增加缓存数量上限，适应移动端更多浏览需求
 const CACHE_EXPIRY_TIME = 7 * 24 * 60 * 60 * 1000; // 7天过期时间
 
 // 安装事件
@@ -33,7 +33,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // 只缓存图片请求（png, jpg, jpeg, gif, webp）
+  // 只缓存图片请求（png, jpg, jpeg, gif, webp）以及缩略图
   if (url.pathname.match(/\.(png|jpg|jpeg|gif|webp)$/i)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {

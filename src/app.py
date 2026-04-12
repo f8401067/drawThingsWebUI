@@ -734,7 +734,10 @@ def serve_generated_image(filename):
     Returns:
         Response: 图片文件
     """
-    return send_from_directory(IMAGES_DIR, filename)
+    response = send_from_directory(IMAGES_DIR, filename)
+    # 添加缓存头，让浏览器和 Service Worker 更容易缓存
+    response.headers['Cache-Control'] = 'public, max-age=31536000'
+    return response
 
 
 @app.route('/thumbnails/<filename>')
@@ -747,7 +750,10 @@ def serve_thumbnail(filename):
     Returns:
         Response: 缩略图文件
     """
-    return send_from_directory(THUMBNAILS_DIR, filename)
+    response = send_from_directory(THUMBNAILS_DIR, filename)
+    # 添加缓存头，让浏览器和 Service Worker 更容易缓存
+    response.headers['Cache-Control'] = 'public, max-age=31536000'
+    return response
 
 
 @app.route('/api/config', methods=['GET'])

@@ -16,7 +16,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
 
         .container {
@@ -968,7 +968,7 @@
     <div class="container">
         <!-- Page Header -->
         <div class="page-header">
-            <h1>生成历史 <span class="user-id-display">ID: <strong id="userUidValue">加载中...</strong></span></h1>
+            <h1>生成历史 <span class="user-id-display">用户ID:<strong id="userUidValue">加载中...</strong>(自动生成)</span></h1>
             <div class="header-actions">
                 <a href="/" class="btn btn-back">返回首页</a>
             </div>
@@ -1038,13 +1038,6 @@
                             <span class="switch-label" id="nsfwStatusLabel">隐藏</span>
                         </div>
                     </div>
-
-                    <!-- Cache Management -->
-                    <div class="filter-row">
-                        <span class="filter-label">💾 缓存管理:</span>
-                        <button class="btn-date-filter" onclick="showCacheStats()" title="查看缓存统计">查看缓存</button>
-                        <button class="btn-date-clear" onclick="clearImageCache()" title="清除所有图片缓存">清除缓存</button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1092,26 +1085,6 @@
         let isBadFilterActive = false; // Bad筛选是否激活
         let showNsfwContent = false; // 默认隐藏NSFW内容
         let availableDates = [];
-
-        // Register Service Worker for image caching
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('[SW] Registered successfully:', registration.scope);
-                        
-                        // 监听 SW 消息，可以显示缓存统计
-                        navigator.serviceWorker.addEventListener('message', (event) => {
-                            if (event.data && event.data.type === 'CACHE_STATS') {
-                                console.log('[SW] Cache stats:', event.data);
-                            }
-                        });
-                    })
-                    .catch(error => {
-                        console.log('[SW] Registration failed:', error);
-                    });
-            });
-        }
 
         // Initialize user ID
         async function initUserId() {
@@ -2044,62 +2017,6 @@
                 });
             });
         };
-
-        // Cache Management Functions
-        function showCacheStats() {
-            if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
-                alert('Service Worker 未激活，请刷新页面后重试');
-                return;
-            }
-
-            const messageChannel = new MessageChannel();
-            messageChannel.port1.onmessage = (event) => {
-                if (event.data && event.data.type === 'CACHE_STATS') {
-                    const stats = event.data;
-                    const urlsList = stats.urls.slice(0, 10).join('\n');
-                    const moreText = stats.urls.length > 10 ? `\n...还有 ${stats.urls.length - 10} 张` : '';
-                    
-                    alert(`📊 缓存统计\n\n已缓存: ${stats.count} / ${stats.maxSize} 张图片\n\n最近缓存的图片:\n${urlsList}${moreText}`);
-                }
-            };
-
-            navigator.serviceWorker.controller.postMessage(
-                { type: 'GET_CACHE_STATS' },
-                [messageChannel.port2]
-            );
-        }
-
-        async function clearImageCache() {
-            const confirmed = await confirm('确定要清除所有图片缓存吗？\n\n清除后，再次访问图片时需要重新从服务器加载。');
-            if (!confirmed) {
-                return;
-            }
-
-            if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
-                alert('Service Worker 未激活，请刷新页面后重试');
-                return;
-            }
-
-            const messageChannel = new MessageChannel();
-            messageChannel.port1.onmessage = (event) => {
-                if (event.data && event.data.type === 'CACHE_CLEARED') {
-                    if (event.data.success) {
-                        alert('✅ 缓存已清除');
-                        // 强制刷新页面以重新加载图片
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
-                    } else {
-                        alert('❌ 清除缓存失败');
-                    }
-                }
-            };
-
-            navigator.serviceWorker.controller.postMessage(
-                { type: 'CLEAR_CACHE' },
-                [messageChannel.port2]
-            );
-        }
     </script>
 </body>
 </html>

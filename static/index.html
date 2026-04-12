@@ -169,8 +169,6 @@
         }
 
         .clear-btn {
-            align-self: flex-end;
-            margin-top: 8px;
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
             border: none;
             border-radius: 6px;
@@ -194,9 +192,6 @@
         }
 
         .fullscreen-btn {
-            align-self: flex-end;
-            margin-top: 8px;
-            margin-left: 8px;
             background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
             border: none;
             border-radius: 6px;
@@ -627,6 +622,308 @@
 
 
 
+        /* Prompt Preset Modal */
+        .preset-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+
+        .preset-modal.show {
+            display: flex;
+        }
+
+        .preset-modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .preset-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .preset-modal-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .preset-close-btn {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .preset-close-btn:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .preset-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .preset-item {
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .preset-item:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+        }
+
+        .preset-item-content {
+            color: #333;
+            font-size: 12px;
+            line-height: 1.5;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .preset-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .preset-action-btn {
+            padding: 3px 8px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .preset-edit-btn {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .preset-edit-btn:hover {
+            background: #44a08d;
+        }
+
+        .preset-delete-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .preset-delete-btn:hover {
+            background: #ee5a6f;
+        }
+
+        .preset-form {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .preset-form-group {
+            margin-bottom: 12px;
+        }
+
+        .preset-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .preset-form-group input,
+        .preset-form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .preset-form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .preset-search-box {
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .preset-search-input {
+            width: 100%;
+            padding: 8px 35px 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        .preset-search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .preset-clear-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            display: none;
+            transition: all 0.3s;
+            line-height: 1;
+        }
+
+        .preset-clear-btn:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 50%;
+        }
+
+        .preset-clear-btn.show {
+            display: block;
+        }
+
+        .preset-form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-preset {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .btn-preset-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-preset-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-preset-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-preset-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .insert-prompt-btn {
+            background: linear-gradient(135deg, #ffa726 0%, #fb8c00 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(255, 167, 38, 0.3);
+        }
+
+        .insert-prompt-btn:hover {
+            background: linear-gradient(135deg, #fb8c00 0%, #f57c00 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 167, 38, 0.4);
+        }
+
+        .insert-prompt-btn:active {
+            transform: translateY(0);
+        }
+
+        .undo-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+            display: none;
+        }
+
+        .undo-btn.show {
+            display: inline-block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .undo-btn:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .undo-btn:active {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .prompt-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
         /* Fullscreen Prompt Modal */
         .prompt-fullscreen-modal {
             position: fixed;
@@ -666,6 +963,12 @@
         .prompt-fullscreen-header h3 {
             margin: 0;
             color: #333;
+        }
+
+        .prompt-fullscreen-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
         }
 
         .prompt-fullscreen-close {
@@ -849,7 +1152,7 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header-section">
-            <h1>AI文生图 <span class="user-id-display">ID: <strong id="userUidValue">加载中...</strong></span></h1>
+            <h1>AI文生图 <span class="user-id-display">用户ID:<strong id="userUidValue">加载中...</strong>(自动生成)</span></h1>
             <div class="header-actions">
                 <button id="backToFormBtn" class="history-btn" onclick="backToForm()" style="display: none; margin-right: 10px;">返回首页</button>
                 <a href="/history.html" class="history-btn">历史图片</a>
@@ -866,13 +1169,15 @@
             <div class="form-group">
                 <label for="prompt">提示词 (Prompt)</label>
                 <div class="textarea-wrapper">
+                    <div style="margin-bottom: 8px; display: flex; gap: 8px; align-items: center;">
+                        <button class="insert-prompt-btn" onclick="openPresetModal()">📋 插入常用提示词</button>
+                        <button id="undoBtn" class="undo-btn" onclick="undoInsert()">↩️ 撤回</button>
+                    </div>
                     <textarea id="prompt" placeholder="输入正面提示词..."></textarea>
-                    <div style="display: flex; gap: 8px; margin-top: 8px; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; gap: 8px;">
-                            <button class="clear-btn" onclick="clearPrompt()">清空</button>
-                            <button class="fullscreen-btn" onclick="openPromptFullscreen()">🔍 全屏编辑</button>
-                        </div>
-                        <button class="btn-ai-refine" id="refineBtn" onclick="refinePromptWithAI()" style="margin: 0; padding: 8px 16px; font-size: 13px;">✨ AI 润色</button>
+                    <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
+                        <button class="clear-btn" onclick="clearPrompt()">🗑️ 清空</button>
+                        <button class="fullscreen-btn" onclick="openPromptFullscreen()">🔍 全屏编辑</button>
+                        <button class="btn-ai-refine" id="refineBtn" onclick="refinePromptWithAI()" style="margin-left: auto; padding: 8px 16px; font-size: 13px;">✨ AI 润色</button>
                     </div>
                 </div>
             </div>
@@ -1001,12 +1306,46 @@
         </div>
     </div>
 
+    <!-- Prompt Preset Modal -->
+    <div id="presetModal" class="preset-modal">
+        <div class="preset-modal-content">
+            <div class="preset-modal-header">
+                <h3>(常用列表会保存在浏览器中)</h3>
+                <button class="preset-close-btn" onclick="closePresetModal()">✕ 关闭</button>
+            </div>
+            <div class="preset-search-box">
+                <input type="text" id="presetSearchInput" class="preset-search-input" placeholder="🔍 搜索提示词..." oninput="filterPresets()">
+                <button id="presetClearBtn" class="preset-clear-btn" onclick="clearPresetSearch()" title="清空搜索">✕</button>
+            </div>
+            <div class="preset-list" id="presetList">
+                <!-- Presets will be loaded here -->
+            </div>
+            <div class="preset-form" id="presetForm" style="display: none;">
+                <div class="preset-form-group">
+                    <label for="presetContent">提示词内容</label>
+                    <textarea id="presetContent" placeholder="输入提示词内容..."></textarea>
+                </div>
+                <div class="preset-form-buttons">
+                    <button class="btn-preset btn-preset-secondary" onclick="cancelEditPreset()">取消</button>
+                    <button class="btn-preset btn-preset-primary" onclick="savePreset()">保存</button>
+                </div>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button class="btn-preset btn-preset-primary" onclick="showAddPresetForm()" style="width: 100%;">+ 添加新提示词</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Prompt Fullscreen Modal -->
     <div id="promptFullscreenModal" class="prompt-fullscreen-modal">
         <div class="prompt-fullscreen-content">
             <div class="prompt-fullscreen-header">
                 <h3>编辑提示词 (自动保存)</h3>
                 <button class="prompt-fullscreen-close" onclick="closePromptFullscreen()">✕ 关闭</button>
+            </div>
+            <div style="margin-bottom: 15px; display: flex; gap: 8px; align-items: center;">
+                <button class="insert-prompt-btn" onclick="openPresetModalFromFullscreen()">📋 插入常用提示词</button>
+                <button id="undoBtnFullscreen" class="undo-btn" onclick="undoInsert()">↩️ 撤回</button>
             </div>
             <textarea id="promptFullscreenTextarea" class="prompt-fullscreen-textarea" placeholder="输入正面提示词..."></textarea>
         </div>
@@ -1063,7 +1402,7 @@
                         });
                     })
                     .catch(error => {
-                        console.log('[SW] Registration failed:', error);
+                        console.error('[SW] Registration failed:', error);
                     });
             });
         }
@@ -1724,6 +2063,20 @@
             modal.classList.remove('show');
         }
 
+        function clearPromptFullscreen() {
+            const textarea = document.getElementById('promptFullscreenTextarea');
+            textarea.value = '';
+            const promptInput = document.getElementById('prompt');
+            promptInput.value = '';
+            saveValues();
+            textarea.focus();
+        }
+
+        function openPresetModalFromFullscreen() {
+            currentTargetTextarea = 'promptFullscreenTextarea';
+            openPresetModal();
+        }
+
         // AI Refine Prompt Function
         async function refinePromptWithAI() {
             console.log('=== refinePromptWithAI called ===');
@@ -1802,8 +2155,398 @@
                 if (modal.classList.contains('show')) {
                     closePromptFullscreen();
                 }
+                const presetModal = document.getElementById('presetModal');
+                if (presetModal.classList.contains('show')) {
+                    closePresetModal();
+                }
             }
         });
+
+        // ===== Prompt Preset Functions =====
+        let presets = [];
+        let editingPresetId = null;
+        let currentTargetTextarea = 'prompt'; // 'prompt' or 'negativePrompt'
+        let filteredPresets = []; // For search results
+        let undoState = null; // Store state for undo
+        let undoTimeout = null; // Timeout for auto-hide undo
+
+        // Load presets from localStorage
+        function loadPresets() {
+            const saved = localStorage.getItem('prompt_presets');
+            if (saved) {
+                try {
+                    presets = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to load presets:', e);
+                    presets = [];
+                }
+            } else {
+                // Initialize with some default presets
+                presets = [
+                    {
+                        id: Date.now(),
+                        content: 'masterpiece, best quality, ultra-detailed, 8k, professional photography, beautiful lighting, sharp focus'
+                    },
+                    {
+                        id: Date.now() + 1,
+                        content: 'beautiful landscape, natural lighting, panoramic view, vivid colors, high resolution, detailed scenery'
+                    },
+                    {
+                        id: Date.now() + 2,
+                        content: 'anime style, vibrant colors, cel shading, detailed character design, expressive eyes, dynamic pose'
+                    }
+                ];
+                savePresets();
+            }
+            filteredPresets = [...presets];
+        }
+
+        // Save presets to localStorage
+        function savePresets() {
+            localStorage.setItem('prompt_presets', JSON.stringify(presets));
+        }
+
+        // Open preset modal
+        function openPresetModal() {
+            const modal = document.getElementById('presetModal');
+            modal.classList.add('show');
+            document.getElementById('presetSearchInput').value = '';
+            filteredPresets = [...presets];
+            renderPresetList();
+            hidePresetForm();
+        }
+
+        // Close preset modal
+        function closePresetModal() {
+            const modal = document.getElementById('presetModal');
+            modal.classList.remove('show');
+            hidePresetForm();
+        }
+
+        // Filter presets based on search
+        function filterPresets() {
+            const searchTerm = document.getElementById('presetSearchInput').value.toLowerCase().trim();
+            const clearBtn = document.getElementById('presetClearBtn');
+            
+            // Show/hide clear button based on input
+            if (searchTerm) {
+                clearBtn.classList.add('show');
+            } else {
+                clearBtn.classList.remove('show');
+            }
+            
+            if (!searchTerm) {
+                filteredPresets = [...presets];
+            } else {
+                filteredPresets = presets.filter(preset => 
+                    preset.content.toLowerCase().includes(searchTerm)
+                );
+            }
+            renderPresetList();
+        }
+
+        // Clear preset search
+        function clearPresetSearch() {
+            const searchInput = document.getElementById('presetSearchInput');
+            searchInput.value = '';
+            searchInput.focus();
+            filterPresets();
+        }
+
+        // Render preset list
+        function renderPresetList() {
+            const listContainer = document.getElementById('presetList');
+            if (!listContainer) return;
+
+            if (filteredPresets.length === 0) {
+                const hasPresets = presets.length > 0;
+                const message = hasPresets ? '没有找到匹配的提示词' : '暂无常用提示词，点击底部按钮添加';
+                listContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: #999;">${message}</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = filteredPresets.map(preset => `
+                <div class="preset-item" onclick="insertPreset(${preset.id})">
+                    <div class="preset-item-content">${escapeHtml(preset.content)}</div>
+                    <div class="preset-actions" onclick="event.stopPropagation()">
+                        <button class="preset-action-btn preset-edit-btn" onclick="editPreset(${preset.id})">编辑</button>
+                        <button class="preset-action-btn preset-delete-btn" onclick="deletePreset(${preset.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Insert preset at cursor position
+        function insertPreset(presetId) {
+            const preset = presets.find(p => p.id === presetId);
+            if (!preset) return;
+
+            const textarea = document.getElementById(currentTargetTextarea);
+            if (!textarea) return;
+
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+
+            // Add comma separator if needed
+            let insertText = preset.content;
+            if (start > 0 && text[start - 1] !== ',' && text[start - 1] !== ' ') {
+                insertText = ', ' + insertText;
+            }
+
+            // Save state for undo before inserting
+            undoState = {
+                textareaId: currentTargetTextarea,
+                cursorPosition: start,
+                insertedLength: insertText.length,
+                previousValue: text
+            };
+
+            // Insert at cursor position
+            const newText = text.substring(0, start) + insertText + text.substring(end);
+            textarea.value = newText;
+
+            // Set cursor position after inserted text
+            const newCursorPos = start + insertText.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+
+            // Sync between main textarea and fullscreen textarea
+            if (currentTargetTextarea === 'prompt') {
+                const fullscreenTextarea = document.getElementById('promptFullscreenTextarea');
+                if (document.getElementById('promptFullscreenModal').classList.contains('show')) {
+                    fullscreenTextarea.value = textarea.value;
+                }
+            } else if (currentTargetTextarea === 'promptFullscreenTextarea') {
+                const mainTextarea = document.getElementById('prompt');
+                mainTextarea.value = textarea.value;
+            }
+
+            // Save values
+            saveValues();
+
+            // Close modal
+            closePresetModal();
+            
+            // Show undo toast
+            showUndoToast();
+        }
+
+        // Show undo toast
+        function showUndoToast() {
+            // Clear existing timeout
+            if (undoTimeout) {
+                clearTimeout(undoTimeout);
+            }
+
+            // Show undo button in main editor
+            const undoBtn = document.getElementById('undoBtn');
+            if (undoBtn) {
+                undoBtn.classList.add('show');
+            }
+
+            // Show undo button in fullscreen editor if open
+            const undoBtnFullscreen = document.getElementById('undoBtnFullscreen');
+            if (undoBtnFullscreen && document.getElementById('promptFullscreenModal').classList.contains('show')) {
+                undoBtnFullscreen.classList.add('show');
+            }
+
+            // Auto hide after 5 seconds
+            undoTimeout = setTimeout(() => {
+                hideUndoButton();
+                undoState = null;
+            }, 5000);
+        }
+
+        // Hide undo button
+        function hideUndoButton() {
+            const undoBtn = document.getElementById('undoBtn');
+            if (undoBtn) {
+                undoBtn.classList.remove('show');
+            }
+
+            const undoBtnFullscreen = document.getElementById('undoBtnFullscreen');
+            if (undoBtnFullscreen) {
+                undoBtnFullscreen.classList.remove('show');
+            }
+        }
+
+        // Undo last insert
+        function undoInsert() {
+            if (!undoState) return;
+
+            const textarea = document.getElementById(undoState.textareaId);
+            if (!textarea) return;
+
+            // Restore previous value
+            textarea.value = undoState.previousValue;
+            
+            // Restore cursor position
+            textarea.setSelectionRange(undoState.cursorPosition, undoState.cursorPosition);
+            textarea.focus();
+
+            // Sync between textareas
+            if (undoState.textareaId === 'prompt') {
+                const fullscreenTextarea = document.getElementById('promptFullscreenTextarea');
+                if (document.getElementById('promptFullscreenModal').classList.contains('show')) {
+                    fullscreenTextarea.value = textarea.value;
+                }
+            } else if (undoState.textareaId === 'promptFullscreenTextarea') {
+                const mainTextarea = document.getElementById('prompt');
+                mainTextarea.value = textarea.value;
+            }
+
+            // Save values
+            saveValues();
+
+            // Hide undo button
+            hideUndoButton();
+
+            // Clear timeout
+            if (undoTimeout) {
+                clearTimeout(undoTimeout);
+                undoTimeout = null;
+            }
+
+            // Clear undo state
+            undoState = null;
+
+            showToast('已撤回');
+        }
+
+        // Show add preset form
+        function showAddPresetForm() {
+            editingPresetId = null;
+            document.getElementById('presetContent').value = '';
+            document.getElementById('presetForm').style.display = 'block';
+            document.getElementById('presetContent').focus();
+        }
+
+        // Edit preset
+        function editPreset(presetId) {
+            const preset = presets.find(p => p.id === presetId);
+            if (!preset) return;
+
+            editingPresetId = presetId;
+            document.getElementById('presetContent').value = preset.content;
+            document.getElementById('presetForm').style.display = 'block';
+            document.getElementById('presetContent').focus();
+        }
+
+        // Cancel edit
+        function cancelEditPreset() {
+            hidePresetForm();
+        }
+
+        // Hide preset form
+        function hidePresetForm() {
+            document.getElementById('presetForm').style.display = 'none';
+            editingPresetId = null;
+        }
+
+        // Save preset
+        function savePreset() {
+            const content = document.getElementById('presetContent').value.trim();
+
+            if (!content) {
+                alert('请填写提示词内容');
+                return;
+            }
+
+            if (editingPresetId) {
+                // Update existing preset
+                const index = presets.findIndex(p => p.id === editingPresetId);
+                if (index !== -1) {
+                    presets[index].content = content;
+                    showToast('提示词已更新');
+                }
+            } else {
+                // Add new preset
+                presets.push({
+                    id: Date.now(),
+                    content: content
+                });
+                showToast('提示词已添加');
+            }
+
+            savePresets();
+            filteredPresets = [...presets];
+            document.getElementById('presetSearchInput').value = '';
+            renderPresetList();
+            hidePresetForm();
+        }
+
+        // Delete preset
+        function deletePreset(presetId) {
+            const preset = presets.find(p => p.id === presetId);
+            if (!preset) return;
+
+            confirm(`确认删除此提示词？`).then(result => {
+                if (result) {
+                    presets = presets.filter(p => p.id !== presetId);
+                    savePresets();
+                    filteredPresets = [...presets];
+                    renderPresetList();
+                    showToast('提示词已删除');
+                }
+            });
+        }
+
+        // Track which textarea is being edited
+        document.addEventListener('DOMContentLoaded', function() {
+            const promptTextarea = document.getElementById('prompt');
+            const negativePromptTextarea = document.getElementById('negativePrompt');
+            
+            if (promptTextarea) {
+                promptTextarea.addEventListener('focus', function() {
+                    currentTargetTextarea = 'prompt';
+                });
+            }
+            
+            if (negativePromptTextarea) {
+                negativePromptTextarea.addEventListener('focus', function() {
+                    currentTargetTextarea = 'negativePrompt';
+                });
+            }
+            
+            // Load presets
+            loadPresets();
+        });
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 10000;
+                animation: fadeInOut 2s ease;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2000);
+        }
+
+        // Add toast animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(style);
 
         // Custom Modal Functions
         let customModalCallback = null;
