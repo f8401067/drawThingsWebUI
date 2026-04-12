@@ -22,85 +22,6 @@
 - **日志记录**：自动记录图片生成和大模型调用的详细日志，便于问题追踪和分析
 
 
-## 前置要求
-
-1. Python 3.8 或更高版本（仅开发环境需要）
-2. DrawThings 服务运行在 `127.0.0.1:8777`（可配置）
-
-## 安装步骤
-
-### 方式一：开发环境（需要 Python）
-
-1. 安装 Python 依赖：
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. 确保 DrawThings 服务正在运行于 `127.0.0.1:8777`（可配置）
-
-### 方式二：独立应用（无需 Python）
-
-**打包后的应用不需要安装 Python！**
-
-1. 运行打包脚本：
-   ```bash
-   python build_standalone.py
-   ```
-
-2. 打包完成后，在 `dist` 目录中找到应用：
-   - **macOS**: `DrawThings WebUI.app`
-   - **Windows**: `DrawThingsWebUI.exe`
-
-3. 双击即可运行，首次启动会自动创建配置文件
-
-详细打包说明请查看 [CONFIG_GUIDE.md](./CONFIG_GUIDE.md)
-
-## ⚙️ 配置说明
-
-### 配置文件位置
-
-应用使用 `config.json` 文件进行统一配置：
-- **开发环境**：项目根目录
-- **打包后**：可执行文件所在目录
-
-首次启动时会自动创建默认配置文件。
-
-### 配置项
-
-```json
-{
-  "port": 9898,
-  "host": "0.0.0.0",
-  "debug": false,
-  "auto_open_browser": true,
-  "drawthings_url": "http://127.0.0.1:7888",
-  "llm_api_url": "",
-  "llm_model": "",
-  "llm_api_key": ""
-}
-```
-
-| 配置项 | 说明 | 默认值 |
-|--------|------|--------|
-| `port` | 服务器端口号（1-65535） | 9898 |
-| `host` | 监听地址（0.0.0.0=允许外部访问，127.0.0.1=仅本地） | 0.0.0.0 |
-| `debug` | 调试模式 | false |
-| `auto_open_browser` | 启动时自动打开浏览器 | true |
-| `drawthings_url` | DrawThings 服务地址 | http://127.0.0.1:7888 |
-| `llm_api_url` | 大模型 API 地址 | - |
-| `llm_model` | 大模型名称 | - |
-| `llm_api_key` | 大模型 API 密钥 | - |
-
-### 修改配置
-
-**方法一：编辑配置文件**
-1. 找到 `config.json` 文件
-2. 用文本编辑器修改配置
-3. 保存并重启应用
-
-
-详细配置说明请查看 [UNIFIED_CONFIG_GUIDE.md](./UNIFIED_CONFIG_GUIDE.md)
-
 ## 🚀 启动应用
 
 ### 方式一：App 启动（推荐普通用户）⭐
@@ -170,7 +91,52 @@ chmod +x quick_start.sh
 
 双击运行 `start.bat` 脚本，它会自动检查依赖并启动服务。
 
----
+## ⚙️ 配置说明
+
+### 配置文件位置
+
+应用使用 `config.json` 文件进行统一配置：
+- **开发环境**：项目根目录
+- **打包后**：可执行文件所在目录
+
+首次启动时会自动创建默认配置文件。
+
+### 配置项
+
+```json
+{
+  "port": 9898,
+  "host": "0.0.0.0",
+  "debug": false,
+  "auto_open_browser": true,
+  "drawthings_url": "http://127.0.0.1:7888",
+  "llm_api_url": "",
+  "llm_model": "",
+  "llm_api_key": ""
+}
+```
+
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| `port` | 服务器端口号（1-65535） | 9898 |
+| `host` | 监听地址（0.0.0.0=允许外部访问，127.0.0.1=仅本地） | 0.0.0.0 |
+| `debug` | 调试模式 | false |
+| `auto_open_browser` | 启动时自动打开浏览器 | true |
+| `drawthings_url` | DrawThings 服务地址 | http://127.0.0.1:7888 |
+| `llm_api_url` | 大模型 API 地址 | - |
+| `llm_model` | 大模型名称 | - |
+| `llm_api_key` | 大模型 API 密钥 | - |
+
+### 修改配置
+
+**方法一：编辑配置文件**
+1. 找到 `config.json` 文件
+2. 用文本编辑器修改配置
+3. 保存并重启应用
+
+
+详细配置说明请查看 [UNIFIED_CONFIG_GUIDE.md](./UNIFIED_CONFIG_GUIDE.md)
+
 
 #### 传统启动脚本
 
