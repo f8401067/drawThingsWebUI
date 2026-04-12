@@ -56,3 +56,4 @@ src/logs/image_generation.log
 src/logs/llm_calls.log
 data/thumbnails/*
 DrawThings WebUI.app/**
+DrawThings_WebUI_MacOS.zip
