@@ -944,6 +944,116 @@ def update_refine_config():
         }), 500
 
 
+@app.route('/api/app_config', methods=['GET'])
+def get_app_config():
+    """获取应用配置（端口、主机等）
+    
+    Returns:
+        Response: JSON 响应，包含应用配置信息
+    """
+    try:
+        from src.config_manager import load_app_config
+        config = load_app_config()
+        
+        return jsonify({
+            "success": True,
+            "config": {
+                "port": config.get('port', 9898),
+                "host": config.get('host', '0.0.0.0'),
+                "auto_open_browser": config.get('auto_open_browser', True)
+            }
+        })
+    except ImportError:
+        return jsonify({
+            "success": False,
+            "error": "配置管理模块未找到"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/app_config', methods=['POST'])
+def update_app_config():
+    """更新应用配置（端口、主机等）
+    
+    Returns:
+        Response: JSON 响应，包含操作结果
+    """
+    try:
+        from src.config_manager import (
+            load_app_config, 
+            save_app_config,
+            update_port,
+            update_host,
+            update_auto_open_browser
+        )
+        
+        data = request.json
+        config = load_app_config()
+        
+        # 更新端口
+        if 'port' in data:
+            new_port = data['port']
+            if not isinstance(new_port, int) or new_port < 1 or new_port > 65535:
+                return jsonify({
+                    "success": False,
+                    "error": "端口号必须在 1-65535 之间"
+                }), 400
+            
+            # 检查端口是否被占用
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex(('localhost', new_port))
+            sock.close()
+            
+            if result == 0:
+                return jsonify({
+                    "success": False,
+                    "error": f"端口 {new_port} 已被占用，请选择其他端口"
+                }), 400
+            
+            if not update_port(new_port):
+                return jsonify({
+                    "success": False,
+                    "error": "保存端口配置失败"
+                }), 500
+        
+        # 更新主机地址
+        if 'host' in data:
+            if not update_host(data['host']):
+                return jsonify({
+                    "success": False,
+                    "error": "保存主机配置失败"
+                }), 500
+        
+        # 更新自动打开浏览器设置
+        if 'auto_open_browser' in data:
+            if not update_auto_open_browser(data['auto_open_browser']):
+                return jsonify({
+                    "success": False,
+                    "error": "保存浏览器设置失败"
+                }), 500
+        
+        return jsonify({
+            "success": True,
+            "message": "配置保存成功，重启应用后生效",
+            "note": "端口和主机配置需要重启应用才能生效"
+        })
+    except ImportError:
+        return jsonify({
+            "success": False,
+            "error": "配置管理模块未找到"
+        }), 500
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 # 注册历史记录相关路由
 register_history_routes(app)
 

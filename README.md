@@ -24,10 +24,12 @@
 
 ## 前置要求
 
-1. Python 3.8 或更高版本
+1. Python 3.8 或更高版本（仅开发环境需要）
 2. DrawThings 服务运行在 `127.0.0.1:8777`（可配置）
 
 ## 安装步骤
+
+### 方式一：开发环境（需要 Python）
 
 1. 安装 Python 依赖：
    ```bash
@@ -36,11 +38,116 @@
 
 2. 确保 DrawThings 服务正在运行于 `127.0.0.1:8777`（可配置）
 
-## 运行服务
+### 方式二：独立应用（无需 Python）
 
-### 方式一：使用快速启动脚本（推荐）
+**打包后的应用不需要安装 Python！**
 
-#### macOS / Linux
+1. 运行打包脚本：
+   ```bash
+   python build_standalone.py
+   ```
+
+2. 打包完成后，在 `dist` 目录中找到应用：
+   - **macOS**: `DrawThings WebUI.app`
+   - **Windows**: `DrawThingsWebUI.exe`
+
+3. 双击即可运行，首次启动会自动创建配置文件
+
+详细打包说明请查看 [CONFIG_GUIDE.md](./CONFIG_GUIDE.md)
+
+## ⚙️ 配置说明
+
+### 配置文件位置
+
+应用使用 `config.json` 文件进行统一配置：
+- **开发环境**：项目根目录
+- **打包后**：可执行文件所在目录
+
+首次启动时会自动创建默认配置文件。
+
+### 配置项
+
+```json
+{
+  "port": 9898,
+  "host": "0.0.0.0",
+  "debug": false,
+  "auto_open_browser": true,
+  "drawthings_url": "http://127.0.0.1:7888",
+  "llm_api_url": "",
+  "llm_model": "",
+  "llm_api_key": ""
+}
+```
+
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| `port` | 服务器端口号（1-65535） | 9898 |
+| `host` | 监听地址（0.0.0.0=允许外部访问，127.0.0.1=仅本地） | 0.0.0.0 |
+| `debug` | 调试模式 | false |
+| `auto_open_browser` | 启动时自动打开浏览器 | true |
+| `drawthings_url` | DrawThings 服务地址 | http://127.0.0.1:7888 |
+| `llm_api_url` | 大模型 API 地址 | - |
+| `llm_model` | 大模型名称 | - |
+| `llm_api_key` | 大模型 API 密钥 | - |
+
+### 修改配置
+
+**方法一：编辑配置文件**
+1. 找到 `config.json` 文件
+2. 用文本编辑器修改配置
+3. 保存并重启应用
+
+
+详细配置说明请查看 [UNIFIED_CONFIG_GUIDE.md](./UNIFIED_CONFIG_GUIDE.md)
+
+## 🚀 启动应用
+
+### 方式一：App 启动（推荐普通用户）⭐
+
+适合不需要修改代码的普通用户，无需安装 Python 环境。
+
+#### macOS
+
+1. **下载应用**
+   - 从 `dist` 目录获取 `DrawThings WebUI.app`
+
+2. **首次启动**
+   ```bash
+   # 双击应用即可
+   open "dist/DrawThings WebUI.app"
+   ```
+
+3. **自动配置**
+   - 首次启动会自动创建 `config.json` 配置文件
+   - 浏览器自动打开 http://localhost:9898
+
+4. **修改配置**（可选）
+   - 右键应用 → 显示包内容
+   - 编辑 `Contents/Resources/config.json`
+   - 重启应用生效
+
+**优势**：
+- ✅ 无需安装 Python
+- ✅ 开箱即用
+- ✅ 独立运行，不依赖系统环境
+
+---
+
+### 方式二：源码启动（推荐开发者）💻
+
+适合需要修改代码、调试或开发的开发者。
+
+#### 前置要求
+
+- Python 3.8+
+- DrawThings 服务运行在 `127.0.0.1:8777`（可配置）
+
+#### 快速启动（推荐）
+
+使用 `quick_start.sh` 脚本，自动处理所有依赖和环境配置：
+
+##### macOS / Linux
 ```bash
 # 赋予执行权限
 chmod +x quick_start.sh
@@ -52,21 +159,22 @@ chmod +x quick_start.sh
 ./quick_start.sh --port 8080
 ```
 
-**特性：**
+**特性**：
 - ✅ 自动检查 Python 环境和依赖
 - ✅ 自动创建和激活虚拟环境
 - ✅ 检查 DrawThings 服务状态
 - ✅ 自动在浏览器中打开应用
 - ✅ 支持通过 `--port` 参数自定义端口
 
-#### Windows
+##### Windows
+
 双击运行 `start.bat` 脚本，它会自动检查依赖并启动服务。
 
 ---
 
-### 方式二：使用传统启动脚本
+#### 传统启动脚本
 
-#### Linux 系统
+##### Linux 系统
 ```bash
 # 赋予执行权限
 chmod +x start.sh
@@ -75,7 +183,7 @@ chmod +x start.sh
 ./start.sh
 ```
 
-#### macOS 系统
+##### macOS 系统
 ```bash
 # 赋予执行权限
 chmod +x start_macos.sh
@@ -84,13 +192,9 @@ chmod +x start_macos.sh
 ./start_macos.sh
 ```
 
-**macOS 特性：**
-- 自动在3秒后打开浏览器访问 http://localhost:5001
-- 如需取消自动打开浏览器，可在启动时按 Ctrl+C
-
 ---
 
-### 方式三：直接运行 Python 应用
+#### 直接运行 Python 应用
 
 ```bash
 # 使用默认端口 9898
@@ -488,11 +592,6 @@ python tests/test_cross_user_rating.py
 3. 检查数据库文件大小，必要时进行优化
 4. **利用浏览器缓存**：首次访问后图片会被缓存，第二次访问秒开
 
-#### Service Worker 缓存问题？
-1. 打开浏览器控制台查看 `[SW]` 日志
-2. 确认使用 localhost 或 HTTPS 环境
-3. 在历史页面点击“清除缓存”按钮重置
-4. 详细说明请查看 [docs/IMAGE_CACHE_FEATURE.md](docs/IMAGE_CACHE_FEATURE.md)
 
 ### 数据迁移
 如果从旧版本升级，需要运行相应的迁移脚本：
