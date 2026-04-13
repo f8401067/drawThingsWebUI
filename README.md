@@ -40,7 +40,7 @@
    # 2. 确保 Launch_DrawThings_WebUI.command 和 DrawThings WebUI.app 在同一目录
    # 3. 双击 Launch_DrawThings_WebUI.command
    ```
-   
+   如果被系统拦截, 需要点开"设置"-"隐私与安全性" 允许本程序启动
    **注意：**
    - 启动后会打开 Terminal 窗口显示日志
    - 首次启动需要等待几秒钟初始化
