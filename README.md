@@ -1,100 +1,101 @@
 # DrawThings WebUI
 
-> **最新版本**: v1.0.3 (2026-04-12)
+> **Latest Version**: v1.0.3 (2026-04-12)
 
-一个基于 Python Flask 和静态 HTML 的 DrawThings Web 界面，界面美观操作友好，方便手机操作。
+[🇨🇳 中文版本](README_CHINESE.md)
 
-用来实现远程（如果是外网环境需自行组网）操作 Mac 上的 DrawThings 进行生图操作，以及查看图片的功能。
+A DrawThings Web interface based on Python Flask and static HTML, with an attractive and user-friendly interface that is convenient for mobile operation.
 
-**注意：需要自行安装 DrawThings，并且在 DrawThings 可以正常生图的情况下，在高级中打开 HTTP Server 功能才能使用**
+Used to remotely operate DrawThings on Mac for image generation and viewing images (if using external network environment, you need to set up networking yourself).
 
-![主页](./docs/image/index.png)
-![图片浏览](./docs/image/image.png)
+**Note: You need to install DrawThings yourself, and enable the HTTP Server function in Advanced settings when DrawThings can generate images normally**
 
-## ✨ 功能特性
+![Home Page](./docs/image/index.png)
+![Image Browser](./docs/image/image.png)
 
-- 🖼️ **图片生成**：支持自定义提示词、尺寸、seed、步数等参数
-- 🤖 **AI 提示词润色**：智能优化提示词（需配置 LLM API）
-- 🔍 **服务器状态检查**：实时显示 DrawThings 服务状态和当前模型
-- 💾 **本地存储**：自动保存输入，下次打开自动填充
-- 🖼️ **图片查看器**：支持放大、缩小、重置和保存图片
-- ⏱️ **耗时统计**：记录每次生成耗时并计算平均值
-- 🚀 **浏览器缓存**：Service Worker 智能缓存，第二次访问秒开，支持离线浏览
-- 🛡️ **NSFW 检测**：基于 LLM 的内容安全检测，自动识别不当内容
-- ⭐ **星级评分**：1-5 星及 Bad 评级功能
-- 🔎 **智能筛选**：按日期、星级、NSFW 状态等多维度筛选
-- 🗑️ **批量清理**：一键删除所有标记为 Bad 的图片
-- 📝 **日志记录**：自动记录图片生成和 LLM 调用日志
+## ✨ Features
 
+- 🖼️ **Image Generation**: Supports custom prompts, dimensions, seed, steps and other parameters
+- 🤖 **AI Prompt Refinement**: Intelligently optimize prompts (requires LLM API configuration)
+- 🔍 **Server Status Check**: Real-time display of DrawThings service status and current model
+- 💾 **Local Storage**: Automatically save inputs, auto-fill on next visit
+- 🖼️ **Image Viewer**: Supports zoom in, zoom out, reset and save images
+- ⏱️ **Time Statistics**: Records generation time for each run and calculates averages
+- 🚀 **Browser Cache**: Service Worker smart caching, second visit loads instantly, supports offline browsing
+- 🛡️ **NSFW Detection**: Content safety detection based on LLM, automatically identifies inappropriate content
+- ⭐ **Star Rating**: 1-5 star and Bad rating functionality
+- 🔎 **Smart Filtering**: Multi-dimensional filtering by date, rating, NSFW status, etc.
+- 🗑️ **Batch Cleanup**: One-click deletion of all images marked as Bad
+- 📝 **Logging**: Automatically logs image generation and LLM call records
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### macOS 用户（推荐）
+### macOS Users (Recommended)
 
-1. **下载应用**
-   - 获取 `DrawThings_WebUI_MacOS.zip` 文件
+1. **Download Application**
+   - Get the `DrawThings_WebUI_MacOS.zip` file
 
-2. **解压并启动**
+2. **Extract and Launch**
    ```bash
-   # 1. 解压 zip 文件到任意目录（如桌面、文档等）
-   # 2. 确保 Launch_DrawThings_WebUI.command 和 DrawThings WebUI.app 在同一目录
-   # 3. 双击 Launch_DrawThings_WebUI.command
+   # 1. Extract zip file to any directory (e.g., Desktop, Documents, etc.)
+   # 2. Ensure Launch_DrawThings_WebUI.command and DrawThings WebUI.app are in the same directory
+   # 3. Double-click Launch_DrawThings_WebUI.command
    ```
-   如果被系统拦截, 需要点开"设置"-"隐私与安全性" 允许本程序启动
+   If blocked by the system, go to "System Settings" > "Privacy & Security" to allow this application to run
    
-   **注意：**
-   - 启动后会打开 Terminal 窗口显示日志
-   - 首次启动需要等待几秒钟初始化
-   - **不要关闭 Terminal 窗口**，否则应用会停止运行
+   **Notes:**
+   - A Terminal window will open to display logs after launch
+   - First launch requires a few seconds for initialization
+   - **Do not close the Terminal window**, otherwise the application will stop running
 
-4. **自动配置**
-   - 首次启动会自动在同级目录创建配置文件和数据目录
-   - **主要：后续如果更新版本，千万不要删除data数据目录**
-   - 浏览器自动打开 http://localhost:9898
+3. **Automatic Configuration**
+   - First launch will automatically create configuration files and data directories in the same level directory
+   - **Important: Do not delete the data directory when updating versions**
+   - Browser automatically opens http://localhost:9898
 
-5. **修改配置**（可选）
-   - 直接在 `.app` 包同级目录编辑 `config.json`
-   - 修改后重启应用生效
+4. **Modify Configuration** (Optional)
+   - Edit `config.json` directly in the same directory as the `.app` package
+   - Restart the application for changes to take effect
 
-**优势：**
-- ✅ 无需安装 Python
-- ✅ 开箱即用
-- ✅ 配置文件易于访问和编辑
-- ✅ 独立运行，不依赖系统环境
+**Advantages:**
+- ✅ No Python installation required
+- ✅ Ready to use out of the box
+- ✅ Configuration files are easy to access and edit
+- ✅ Runs independently, no dependency on system environment
 
 ---
 
-### 其他平台用户
+### Other Platform Users
 
-请参考 [DEVELOPER.md](DEVELOPER.md) 了解如何从源码启动。
+Please refer to [DEVELOPER.md](DEVELOPER.md) for how to start from source code.
 
-## ⚙️ 配置说明
+## ⚙️ Configuration
 
-### 配置文件位置
+### Configuration File Location
 
-**打包应用（v1.0.3+）**：
+**Packaged Application (v1.0.3+)**:
 ```
-你的目录/
+your_directory/
 ├── DrawThings WebUI.app/
-├── config.json              ← 配置文件（同级目录）
-└── data/                    ← 数据目录（同级目录）
-    ├── generated_images/    # 生成的图片
-    ├── thumbnails/          # 缩略图
-    ├── logs/                # 日志文件
-    └── history.db           # 历史记录数据库
+├── config.json              ← Configuration file (same level directory)
+└── data/                    ← Data directory (same level directory)
+    ├── generated_images/    # Generated images
+    ├── thumbnails/          # Thumbnails
+    ├── logs/                # Log files
+    └── history.db           # History database
 ```
 
-**源码运行**：项目根目录 `config.json`
+**Source Code Run**: Project root directory `config.json`
 
-首次启动时会自动创建默认配置文件和数据目录。
+Default configuration file and data directories will be automatically created on first launch.
 
-### 如何修改配置
+### How to Modify Configuration
 
-1. **找到配置文件**：在 `.app` 包的同级目录下找到 `config.json`
-2. **编辑文件**：用文本编辑器打开并修改
-3. **重启应用**：关闭 Terminal 窗口，重新启动应用
+1. **Find Configuration File**: Locate `config.json` in the same directory as the `.app` package
+2. **Edit File**: Open and modify with a text editor
+3. **Restart Application**: Close the Terminal window and restart the application
 
-### 配置项
+### Configuration Items
 
 ```json
 {
@@ -114,63 +115,63 @@
 }
 ```
 
-| 配置项 | 说明 | 默认值 |
+| Configuration Item | Description | Default Value |
 |--------|------|--------|
-| `port` | 服务器端口号 | 9898 |
-| `host` | 监听地址（0.0.0.0=允许外部访问） | 0.0.0.0 |
-| `debug` | 调试模式 | false |
-| `auto_open_browser` | 启动时自动打开浏览器 | true |
-| `drawthings_url` | DrawThings 服务地址 | http://127.0.0.1:7888 |
-| `llm_api_url` | 大模型 API 地址 | - |
-| `llm_model` | 大模型名称 | - |
-| `llm_api_key` | 大模型 API 密钥 | - |
-| `thumbnail.max_size` | 缩略图最大尺寸 [宽, 高] | [300, 300] |
-| `thumbnail.quality` | JPEG压缩质量 (1-100) | 85 |
-| `thumbnail.format` | 输出格式 (JPEG/PNG/WEBP) | JPEG |
+| `port` | Server port number | 9898 |
+| `host` | Listen address (0.0.0.0=allow external access) | 0.0.0.0 |
+| `debug` | Debug mode | false |
+| `auto_open_browser` | Automatically open browser on startup | true |
+| `drawthings_url` | DrawThings service address | http://127.0.0.1:7888 |
+| `llm_api_url` | Large language model API address | - |
+| `llm_model` | Large language model name | - |
+| `llm_api_key` | Large language model API key | - |
+| `thumbnail.max_size` | Thumbnail maximum size [width, height] | [300, 300] |
+| `thumbnail.quality` | JPEG compression quality (1-100) | 85 |
+| `thumbnail.format` | Output format (JPEG/PNG/WEBP) | JPEG |
 
-### 修改配置
+### Modify Configuration
 
-1. 找到 `config.json` 文件
-2. 用文本编辑器修改配置
-3. 保存并重启应用
-
----
-
-### 访问应用
-
-服务启动后，在浏览器中访问：
-- **主页**：`http://localhost:9898` （或你指定的端口）
-- **历史记录**：`http://localhost:9898/history.html`
-
-## 📖 使用说明
-
-### 基本使用
-
-1. 打开浏览器访问 `http://localhost:9898`
-2. 页面会自动检查 DrawThings 服务器状态
-3. 填写生成参数：
-   - **提示词**：描述你想要生成的图片内容
-   - **图片尺寸**：从预设的尺寸中选择
-   - **Seed**：随机种子（-1 表示随机）
-   - **负面提示词**：不希望在图片中出现的内容
-   - **步数**：生成步数，越多质量越好但速度越慢
-4. 点击“生成图片”按钮
-5. 等待生成完成（可能需要几分钟）
-6. 查看生成结果，可以放大、缩小、保存图片
-7. 点击“返回重新生成”可以再次生成
+1. Find the `config.json` file
+2. Modify configuration with a text editor
+3. Save and restart the application
 
 ---
 
-### NSFW 自动检测
+### Access Application
 
-当配置了 LLM 服务后，系统会自动检测生成内容的安全性：
+After the service starts, access in browser:
+- **Home Page**: `http://localhost:9898` (or your specified port)
+- **History**: `http://localhost:9898/history.html`
 
-1. **自动检测**：图片生成完成后，系统会使用 LLM 分析提示词内容
-2. **实时警告**：如果检测到 NSFW 内容，会弹出警告窗口提醒用户
-3. **自动标记**：NSFW 图片会在数据库中标记，历史记录中可选择性显示
-4. **隐私保护**：默认隐藏 NSFW 图片，需要手动开启显示开关
+## 📖 Usage Instructions
 
-配置方法：在 `config.json` 中添加 LLM 相关配置：
+### Basic Usage
+
+1. Open browser and access `http://localhost:9898`
+2. The page will automatically check DrawThings server status
+3. Fill in generation parameters:
+   - **Prompt**: Describe the image content you want to generate
+   - **Image Size**: Select from preset sizes
+   - **Seed**: Random seed (-1 means random)
+   - **Negative Prompt**: Content you don't want to appear in the image
+   - **Steps**: Generation steps, more steps mean better quality but slower speed
+4. Click the "Generate Image" button
+5. Wait for generation to complete (may take a few minutes)
+6. View the generated result, you can zoom in, zoom out, and save the image
+7. Click "Return to Regenerate" to generate again
+
+---
+
+### NSFW Auto Detection
+
+When LLM service is configured, the system will automatically detect content safety:
+
+1. **Auto Detection**: After image generation completes, the system will use LLM to analyze prompt content
+2. **Real-time Warning**: If NSFW content is detected, a warning window will pop up to alert users
+3. **Auto Tagging**: NSFW images will be tagged in the database, and can be selectively displayed in history
+4. **Privacy Protection**: NSFW images are hidden by default, requiring manual toggle to display
+
+Configuration method: Add LLM-related configuration in `config.json`:
 ```json
 {
   "llm_api_url": "http://your-llm-server/v1/chat/completions",
@@ -181,16 +182,16 @@
 
 ---
 
-### 缩略图功能
+### Thumbnail Feature
 
-为了提升外网访问历史页面时的图片加载速度，系统支持缩略图功能：
+To improve image loading speed when accessing history pages from external networks, the system supports thumbnail functionality:
 
-1. **自动缩略图生成**：图片生成完成后，系统会自动生成缩略图（约 300x300 像素）
-2. **快速预览**：历史记录页面优先加载缩略图，点击后才会加载完整尺寸的原图
-3. **流量节省**：缩略图大小通常只有原图的 1-2%，大幅减少网络流量
-4. **加载加速**：在外网环境下，缩略图加载速度比原图快 80-100 倍
+1. **Auto Thumbnail Generation**: After image generation completes, the system automatically generates thumbnails (approximately 300x300 pixels)
+2. **Quick Preview**: History page prioritizes loading thumbnails, only loads full-size original images when clicked
+3. **Bandwidth Savings**: Thumbnails are typically only 1-2% the size of original images, significantly reducing network traffic
+4. **Loading Acceleration**: In external network environments, thumbnail loading is 80-100 times faster than original images
 
-配置方法：在 `config.json` 中自定义缩略图参数：
+Configuration method: Customize thumbnail parameters in `config.json`:
 ```json
 {
   "thumbnail": {
@@ -201,167 +202,168 @@
 }
 ```
 
-**配置项说明：**
-- **max_size**: 缩略图最大尺寸 [宽度, 高度]，默认 [300, 300]
-  - 建议范围: [150, 150] ~ [600, 600]
-  - 越大越清晰，但文件也越大
+**Configuration Item Descriptions:**
+- **max_size**: Thumbnail maximum size [width, height], default [300, 300]
+  - Recommended range: [150, 150] ~ [600, 600]
+  - Larger means clearer but also larger file size
   
-- **quality**: JPEG/WEBP 压缩质量 (1-100)，默认 85
-  - 较低值 (60-75): 文件更小，质量稍差
-  - 中等值 (80-90): 平衡选择（推荐）
-  - 较高值 (90-100): 质量更好，文件更大
+- **quality**: JPEG/WEBP compression quality (1-100), default 85
+  - Lower values (60-75): Smaller files, slightly lower quality
+  - Medium values (80-90): Balanced choice (recommended)
+  - Higher values (90-100): Better quality, larger files
   
-- **format**: 输出格式，支持 "JPEG", "PNG", "WEBP"
-  - **JPEG** (推荐): 体积小，适合照片类图片
-  - **PNG**: 无损压缩，体积较大，适合线条图
-  - **WEBP**: 现代格式，体积最小，兼容性稍差
+- **format**: Output format, supports "JPEG", "PNG", "WEBP"
+  - **JPEG** (recommended): Small volume, suitable for photo-type images
+  - **PNG**: Lossless compression, larger volume, suitable for line drawings
+  - **WEBP**: Modern format, smallest volume, slightly less compatible
 
-**迁移已有数据：**
-如果你已经有生成的图片但没有缩略图，可以运行迁移脚本：
+**Migrate Existing Data:**
+If you already have generated images but no thumbnails, you can run the migration script:
 ```bash
 python scripts/migrate_add_thumbnails.py
 ```
 
 ---
 
-### 历史记录管理
+### History Management
 
-访问 `http://localhost:9898/history.html` 进入历史记录页面：
+Access `http://localhost:9898/history.html` to enter the history page:
 
-#### 浏览器缓存功能
-- **自动缓存**：首次访问图片后自动缓存到浏览器，第二次访问秒开
-- **智能策略**：优先从缓存加载，后台静默更新保持最新
-- **容量管理**：最多缓存 50 张图片，自动清理最旧的
-- **离线浏览**：网络断开时仍可访问已缓存的图片
-- **缓存管理**：在筛选条件面板中可查看缓存状态和清除缓存
+#### Browser Cache Feature
+- **Auto Cache**: Images are automatically cached to browser after first visit, second visit loads instantly
+- **Smart Strategy**: Prioritize loading from cache, silently update in background to keep fresh
+- **Capacity Management**: Maximum 50 images cached, automatically cleans oldest
+- **Offline Browsing**: Can still access cached images when network is disconnected
+- **Cache Management**: Can view cache status and clear cache in filter panel
 
-#### 评分功能
-- **星级评分**：点击星星(★)为图片进行 1-5 星评分
-- **Bad 标记**：点击“👎 Bad”按钮标记不喜欢的图片
-- **跨用户评分**：可以为任何用户的图片进行评分
+#### Rating Feature
+- **Star Rating**: Click stars (★) to rate images 1-5 stars
+- **Bad Marking**: Click "👎 Bad" button to mark disliked images
+- **Cross-user Rating**: Can rate images from any user
 
-#### 筛选功能
-- **日期筛选**：选择特定日期查看历史记录
-- **星级筛选**：支持多选，可同时选择多个星级
-- **NSFW 筛选**：可选择显示或隐藏 NSFW 内容
-- **用户视图**：切换“只看我的”或“查看所有用户”
+#### Filter Feature
+- **Date Filter**: Select specific dates to view history
+- **Star Filter**: Supports multiple selection, can select multiple ratings simultaneously
+- **NSFW Filter**: Can choose to show or hide NSFW content
+- **User View**: Toggle between "Only Mine" or "View All Users"
 
-#### 批量清理
-- **删除 Bad 图片**：在 Bad 筛选状态下，可一键删除所有标记为 Bad 的图片
-- **安全机制**：必须先在 Bad 筛选状态下才能执行删除操作
-- **双重清理**：同时删除数据库记录和原文件，释放存储空间
-
----
-
-## ⚠️ 注意事项
-
-### 基本要求
-- 首次运行前请确保 DrawThings 服务已启动
-- 图片生成可能需要较长时间（约 5 分钟）
-- 生成的图片会保存在 `data/generated_images` 目录
-- 用户的输入会自动保存到浏览器本地存储
-
-### NSFW 检测功能
-- 需要配置 LLM 服务才能启用自动 NSFW 检测
-- 检测结果依赖于 LLM 模型的准确性
-- NSFW 图片默认隐藏，保护隐私和合规性
-- 可通过历史记录页面的开关手动显示/隐藏 NSFW 内容
-
-### 评分与筛选
-- 评分数据存储在 SQLite 数据库中，建议定期备份
-- 星级筛选支持多选，可灵活组合不同评级
-- Bad 图片删除操作不可恢复，请谨慎操作
-- 跨用户评分功能允许多用户协作评审
-
-### 性能优化
-- 大量历史记录时建议使用分页加载
-- 定期清理 Bad 图片和不需要的记录可提升查询性能
-- **浏览器缓存**：首次访问后图片自动缓存，第二次访问速度提升 20-50 倍
-- **缩略图功能**：启用缩略图可大幅提升外网访问速度，减少 98% 流量消耗
+#### Batch Cleanup
+- **Delete Bad Images**: In Bad filter state, can one-click delete all images marked as Bad
+- **Safety Mechanism**: Must be in Bad filter state before executing delete operation
+- **Dual Cleanup**: Simultaneously deletes database records and original files, freeing storage space
 
 ---
 
-## ❓ 常见问题
+## ⚠️ Precautions
 
-### NSFW 检测不工作？
-1. 检查 `config.json` 中是否正确配置了 LLM 相关参数
-2. 确认 LLM 服务是否正常运行并可访问
-3. 查看后端控制台是否有错误日志
+### Basic Requirements
+- Ensure DrawThings service is started before first run
+- Image generation may take a long time (about 5 minutes)
+- Generated images will be saved in `data/generated_images` directory
+- User inputs are automatically saved to browser local storage
 
-### 评分功能异常？
-1. 检查浏览器控制台是否有 JavaScript 错误
-2. 验证 API 请求是否成功发送
+### NSFW Detection Feature
+- Requires LLM service configuration to enable automatic NSFW detection
+- Detection results depend on LLM model accuracy
+- NSFW images are hidden by default to protect privacy and compliance
+- Can manually show/hide NSFW content through toggle on history page
 
-### 历史记录加载缓慢？
-1. 使用日期或星级筛选减少数据量
-2. 定期清理不需要的历史记录
-3. **利用浏览器缓存**：首次访问后图片会被缓存，第二次访问秒开
-4. **启用缩略图功能**：配置缩略图可大幅提升外网访问速度
+### Rating and Filtering
+- Rating data is stored in SQLite database, regular backup recommended
+- Star filter supports multiple selection, flexible combination of different ratings
+- Bad image deletion operation is irreversible, please operate with caution
+- Cross-user rating feature allows multi-user collaborative review
 
-### 缩略图未生成？
-1. 确认已安装 Pillow 库：`pip install Pillow`
-2. 检查 `data/thumbnails/` 目录是否存在且有写入权限
-3. 查看日志文件 `data/logs/image_generation.log`
-4. 对于已有图片，运行迁移脚本：`python scripts/migrate_add_thumbnails.py`
-
----
-
-## 🤝 贡献与扩展
-
-欢迎贡献代码或提出建议！主要扩展方向：
-- 更多 AI 模型集成
-- 更丰富的图片编辑功能
-- 团队协作功能增强
-- 性能优化和缓存机制
+### Performance Optimization
+- For large amounts of history, paginated loading is recommended
+- Regular cleanup of Bad images and unnecessary records can improve query performance
+- **Browser Cache**: Images are automatically cached after first visit, second visit speed increases 20-50 times
+- **Thumbnail Feature**: Enabling thumbnails can greatly improve external network access speed, reducing traffic consumption by 98%
 
 ---
 
-## 📝 更新日志
+## ❓ Frequently Asked Questions
+
+### NSFW Detection Not Working?
+1. Check if LLM-related parameters are correctly configured in `config.json`
+2. Confirm if LLM service is running normally and accessible
+3. Check backend console for error logs
+
+### Rating Feature Abnormal?
+1. Check browser console for JavaScript errors
+2. Verify if API requests are sent successfully
+
+### History Loading Slow?
+1. Use date or star filters to reduce data volume
+2. Regularly clean up unnecessary history records
+3. **Utilize Browser Cache**: Images are cached after first visit, second visit loads instantly
+4. **Enable Thumbnail Feature**: Configuring thumbnails can greatly improve external network access speed
+
+### Thumbnails Not Generated?
+1. Confirm Pillow library is installed: `pip install Pillow`
+2. Check if `data/thumbnails/` directory exists and has write permissions
+3. Check log file `data/logs/image_generation.log`
+4. For existing images, run migration script: `python scripts/migrate_add_thumbnails.py`
+
+---
+
+## 🤝 Contribution and Extension
+
+Welcome to contribute code or suggestions! Main extension directions:
+- More AI model integration
+- Richer image editing features
+- Enhanced team collaboration features
+- Performance optimization and caching mechanisms
+
+---
+
+## 📝 Changelog
 
 ### v1.0.3 (2026-04-12)
 
-**重大改进**：
-- ✅ **统一路径管理方案**：所有配置文件和数据文件现在都保存在 `.app` 包的同级目录
-- ✅ **环境变量驱动**：通过 `APP_ROOT_DIR` 环境变量传递应用根目录
-- ✅ **代码简化**：不再区分开发环境和打包环境，统一从环境变量读取路径
+**Major Improvements**:
+- ✅ **Unified Path Management Solution**: All configuration files and data files are now saved in the same level directory as the `.app` package
+- ✅ **Environment Variable Driven**: Pass application root directory through `APP_ROOT_DIR` environment variable
+- ✅ **Code Simplification**: No longer distinguish between development and packaged environments, uniformly read paths from environment variables
 
-**用户体验提升**：
-- 配置文件更容易找到和编辑（不在应用包内部）
-- 避免修改应用包内容导致的签名问题
-- 符合 macOS 应用的常见做法
-- 更直观的目录结构
+**User Experience Enhancements**:
+- Configuration files are easier to find and edit (not inside application package)
+- Avoid signature issues caused by modifying application package contents
+- Follows common practices for macOS applications
+- More intuitive directory structure
 
 ### v1.0.2 (2026-04-12)
 
-**Bug 修复**：
-- 修复 PyInstaller 打包后配置文件路径错误的问题
-- 修复所有模块的路径加载逻辑
+**Bug Fixes**:
+- Fixed configuration file path error issue after PyInstaller packaging
+- Fixed path loading logic for all modules
 
 ### v1.0.1 (2026-04-12)
 
-**Bug 修复**：
-- 修复配置文件无法修改的问题
+**Bug Fixes**:
+- Fixed issue where configuration file could not be modified
 
-### v1.0.0 (初始版本)
+### v1.0.0 (Initial Release)
 
-**功能特性**：
-- 图片生成与管理
-- AI 提示词润色
-- NSFW 检测
-- 星级评分系统
-- 历史记录与筛选
-- 缩略图支持
-- 浏览器缓存优化
-
----
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+**Features**:
+- Image generation and management
+- AI prompt refinement
+- NSFW detection
+- Star rating system
+- History and filtering
+- Thumbnail support
+- Browser cache optimization
 
 ---
 
-## 🔗 相关链接
+## 📄 License
 
-- [开发者指南](DEVELOPER.md) - 开发环境设置、代码结构、打包部署
-- [功能文档](docs/) - 各功能详细说明
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🔗 Related Links
+
+- [Developer Guide](DEVELOPER.md) - Development environment setup, code structure, packaging deployment
+- [Feature Documentation](docs/) - Detailed descriptions of various features
+- [🇨🇳 中文文档](README_CHINESE.md) - Chinese version documentation
